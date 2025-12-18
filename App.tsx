@@ -133,13 +133,13 @@ const App: React.FC = () => {
     if (isAddingContract) return <AddContract initialData={editingContract} onConfirmSave={handleSaveContract} onCancel={() => setIsAddingContract(false)} />;
 
     switch (currentView) {
-      case 'dashboard': return <Dashboard contracts={contracts} deadlines={deadlines} onAddContract={() => setIsAddingContract(true)} onNavigate={handleNavigation} aiEnabled={true} />;
+      case 'dashboard': return <Dashboard contracts={contracts} deadlines={deadlines} onAddContract={() => setIsAddingContract(true)} aiEnabled={true} />;
       case 'contracts': return <ContractList contracts={contracts} onAddContract={() => setIsAddingContract(true)} onOpenAI={c => { setSelectedContractForAI(c); setCurrentView('ai-advisor'); }} onEditContract={handleEditContract} onDeleteContract={handleDeleteContract} />;
       case 'properties': return <PropertyList contracts={contracts} />;
       case 'ai-advisor': return <AIAdvisor contracts={contracts} focusedContract={selectedContractForAI} onClearFocus={() => setSelectedContractForAI(null)} />;
       case 'calendar': return <CalendarView deadlines={deadlines} />;
       case 'settings': return <Settings onNavigate={handleNavigation} />;
-      default: return <Dashboard contracts={contracts} deadlines={deadlines} onAddContract={() => setIsAddingContract(true)} onNavigate={handleNavigation} aiEnabled={true} />;
+      default: return <Dashboard contracts={contracts} deadlines={deadlines} onAddContract={() => setIsAddingContract(true)} aiEnabled={true} />;
     }
   };
 
