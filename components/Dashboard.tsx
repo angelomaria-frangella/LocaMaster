@@ -4,7 +4,7 @@ import { Contract, DeadlineEvent, UrgencyLevel } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { 
   AlertTriangle, Euro, Briefcase, Zap, TrendingUp, 
-  FilePlus, BrainCircuit, Clock, Database, Wifi, ShieldAlert, Target
+  FilePlus, BrainCircuit, Clock, Database, ShieldAlert, Target, Activity
 } from 'lucide-react';
 import ReportGenerator from './ReportGenerator';
 import { generatePortfolioInsights } from '../services/geminiService';
@@ -22,8 +22,10 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
   const [aiInsights, setAiInsights] = useState<{category: string, text: string}[]>([]);
   const [isInsightsLoading, setIsInsightsLoading] = useState(false);
   const [systemStatus, setSystemStatus] = useState({ db: false, ai: false });
+  const [lastUpdate, setLastUpdate] = useState(new Date().toLocaleTimeString());
 
   useEffect(() => {
+    const timer = setInterval(() => setLastUpdate(new Date().toLocaleTimeString()), 1000);
     setSystemStatus({
         db: isSupabaseConfigured(),
         ai: !!process.env.API_KEY
@@ -36,6 +38,7 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
         setIsInsightsLoading(false);
       }).catch(() => setIsInsightsLoading(false));
     }
+    return () => clearInterval(timer);
   }, [contracts, aiEnabled]);
 
   const stats = useMemo(() => {
@@ -93,10 +96,10 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
               <div className="space-y-8">
                   <div className="flex flex-wrap gap-4">
                       <div className={`flex items-center gap-2.5 px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${systemStatus.db ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-500'}`}>
-                          <Database className="w-3.5 h-3.5" /> DB Engine: {systemStatus.db ? 'Synced' : 'Local'}
+                          <Database className="w-3.5 h-3.5" /> Cloud: {systemStatus.db ? 'Online' : 'Local'}
                       </div>
                       <div className={`flex items-center gap-2.5 px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${systemStatus.ai ? 'bg-primary-500/10 border-primary-500/20 text-primary-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-500'}`}>
-                          <Wifi className="w-3.5 h-3.5" /> AI Core: {systemStatus.ai ? 'Active' : 'Offline'}
+                          <Activity className="w-3.5 h-3.5 animate-pulse" /> AI Sync: {lastUpdate}
                       </div>
                   </div>
                   
