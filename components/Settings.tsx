@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Shield, Globe, Bell, Building, LayoutDashboard, ArrowRight, Database, Cloud, HardDrive, Sparkles, RefreshCw, ExternalLink, Key } from 'lucide-react';
+import { Shield, Globe, Bell, Building, LayoutDashboard, ArrowRight, Database, Cloud, HardDrive, Sparkles, RefreshCw, ExternalLink, Key, Terminal, Github, Send } from 'lucide-react';
 import { isSupabaseConfigured } from '../services/supabaseService';
 
 declare var window: any;
@@ -62,6 +62,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
     { id: 'security', label: 'Sicurezza & Cloud', icon: Shield },
     { id: 'general', label: 'Profilo Studio', icon: Building },
     { id: 'integrations', label: 'Workspace Integration', icon: Globe },
+    { id: 'deploy', label: 'Deployment & Terminal', icon: Terminal },
     { id: 'notifications', label: 'Notifiche', icon: Bell },
   ];
 
@@ -171,6 +172,70 @@ export default function Settings({ onNavigate }: SettingsProps) {
                     <InputField label="Google Client ID" value={googleClientId} onChange={setGoogleClientId} placeholder="xxxxxx-xxxxxxxx.apps.googleusercontent.com" />
                 </div>
                 <button onClick={handleSaveGoogleConfig} className="flex items-center gap-3 bg-primary-600 hover:bg-primary-500 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Salva Configurazione</button>
+             </div>
+          )}
+
+          {activeTab === 'deploy' && (
+             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                <h3 className="text-2xl font-black text-white uppercase italic flex items-center gap-3">
+                    <Terminal className="w-8 h-8 text-primary-500" /> Deployment Console
+                </h3>
+                
+                <div className="bg-black rounded-3xl p-8 border border-slate-800 font-mono shadow-inner relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-500/40 to-transparent"></div>
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        <span className="ml-4 text-[10px] text-slate-600 uppercase font-black tracking-widest">Git Update Routine</span>
+                    </div>
+                    
+                    <div className="space-y-4 text-sm">
+                        <div className="flex gap-4">
+                            <span className="text-slate-700">1</span>
+                            <span className="text-emerald-500">git</span>
+                            <span className="text-white">add .</span>
+                        </div>
+                        <div className="flex gap-4">
+                            <span className="text-slate-700">2</span>
+                            <span className="text-emerald-500">git</span>
+                            <span className="text-white">commit -m <span className="text-amber-400">"Update: Nuove funzionalità IA"</span></span>
+                        </div>
+                        <div className="flex gap-4">
+                            <span className="text-slate-700">3</span>
+                            <span className="text-emerald-500">git</span>
+                            <span className="text-white">push origin main</span>
+                        </div>
+                    </div>
+                    
+                    <div className="mt-8 pt-6 border-t border-slate-900 flex justify-between items-center">
+                        <span className="text-[10px] text-slate-500 flex items-center gap-2">
+                            <Github className="w-4 h-4" /> Ready for GitHub synchronization
+                        </span>
+                        <div className="flex items-center gap-2 text-emerald-500 text-[10px] font-bold animate-pulse">
+                            <Send className="w-3 h-3" /> VERCEL DETECTED
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer" className="p-6 bg-slate-950 border border-slate-800 rounded-2xl hover:border-primary-500 transition-all group">
+                        <h4 className="text-white font-black text-xs uppercase tracking-widest mb-2">Vercel Dashboard</h4>
+                        <p className="text-[10px] text-slate-500">Monitora lo stato della build e i log di produzione.</p>
+                    </a>
+                    <a href="https://github.com" target="_blank" rel="noreferrer" className="p-6 bg-slate-950 border border-slate-800 rounded-2xl hover:border-primary-500 transition-all group">
+                        <h4 className="text-white font-black text-xs uppercase tracking-widest mb-2">GitHub Repository</h4>
+                        <p className="text-[10px] text-slate-500">Gestisci i rami del codice e la cronologia modifiche.</p>
+                    </a>
+                </div>
+             </div>
+          )}
+
+          {activeTab === 'notifications' && (
+             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 flex flex-col items-center justify-center py-20 opacity-40">
+                <Bell className="w-16 h-16 text-slate-500 mb-4" />
+                <h3 className="text-xl font-black text-white uppercase italic tracking-widest">Notification Engine</h3>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-[0.3em]">Modulo in fase di rilascio</p>
              </div>
           )}
         </div>
