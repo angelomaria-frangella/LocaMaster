@@ -31,7 +31,7 @@ const App: React.FC = () => {
   const [selectedContractForAI, setSelectedContractForAI] = useState<Contract | null>(null);
 
   useEffect(() => {
-      console.log("%c LocaMaster AI V1.8.0 - TITAN EDITION ONLINE ", "background: #6366f1; color: white; font-weight: bold; border-radius: 4px; padding: 2px 10px;");
+      console.log("%c LocaMaster AI V1.9.0 - COCKPIT PRIME ONLINE ", "background: #6366f1; color: white; font-weight: bold; border-radius: 4px; padding: 2px 10px;");
       localStorage.setItem('locamaster_contracts', JSON.stringify(contracts));
   }, [contracts]);
 
