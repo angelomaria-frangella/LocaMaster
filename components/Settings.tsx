@@ -147,10 +147,19 @@ export default function Settings({ onNavigate }: SettingsProps) {
              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                 <h3 className="text-2xl font-black text-white uppercase italic">Studio Profile</h3>
                 <div className="grid grid-cols-1 gap-6">
-                   <InputField label="Ragione Sociale" value={studioName} onChange={setStudioName} />
+                   <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ragione Sociale</label>
+                        <input type="text" value={studioName} onChange={(e) => setStudioName(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-2xl p-4 text-white font-bold outline-none focus:border-primary-500" />
+                   </div>
                    <div className="grid grid-cols-2 gap-6">
-                        <InputField label="P.IVA" value={studioPiva} onChange={setStudioPiva} />
-                        <InputField label="Città" value={studioCity} onChange={setStudioCity} />
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">P.IVA</label>
+                            <input type="text" value={studioPiva} onChange={(e) => setStudioPiva(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-2xl p-4 text-white font-bold outline-none focus:border-primary-500" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Città</label>
+                            <input type="text" value={studioCity} onChange={(e) => setStudioCity(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-2xl p-4 text-white font-bold outline-none focus:border-primary-500" />
+                        </div>
                    </div>
                 </div>
                 <button onClick={handleSaveStudioData} className="flex items-center gap-3 bg-primary-600 hover:bg-primary-500 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl"><RefreshCw className="w-4 h-4" /> Aggiorna Profilo</button>
@@ -160,7 +169,10 @@ export default function Settings({ onNavigate }: SettingsProps) {
           {activeTab === 'integrations' && (
              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                 <h3 className="text-2xl font-black text-white uppercase italic">Workspace Integration</h3>
-                <InputField label="Google Client ID" value={googleClientId} onChange={setGoogleClientId} placeholder="xxxxxx-xxxxxxxx.apps.googleusercontent.com" />
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Google Client ID</label>
+                    <input type="text" value={googleClientId} onChange={(e) => setGoogleClientId(e.target.value)} placeholder="xxxxxx-xxxxxxxx.apps.googleusercontent.com" className="w-full bg-slate-950 border border-slate-700 rounded-2xl p-4 text-white font-bold outline-none focus:border-primary-500" />
+                </div>
                 <button onClick={handleSaveGoogleConfig} className="flex items-center gap-3 bg-primary-600 hover:bg-primary-500 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Salva Configurazione</button>
              </div>
           )}
@@ -173,7 +185,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
                 <div className="bg-black rounded-3xl p-8 border border-slate-800 font-mono shadow-inner relative overflow-hidden group">
                     <div className="space-y-4 text-sm">
                         <div className="flex gap-4 text-white"><span>$ git add .</span></div>
-                        <div className="flex gap-4 text-white"><span>$ git commit -m "V1.5.0 Deployment"</span></div>
+                        <div className="flex gap-4 text-white"><span>$ git commit -m "V1.7.0 Ultimate"</span></div>
                         <div className="flex gap-4 text-white"><span>$ git push origin main</span></div>
                     </div>
                 </div>
@@ -184,10 +196,3 @@ export default function Settings({ onNavigate }: SettingsProps) {
     </div>
   );
 }
-
-const InputField = ({ label, value, onChange, placeholder = "" }: any) => (
-    <div className="space-y-2">
-        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">{label}</label>
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="w-full bg-slate-950 border border-slate-700 rounded-2xl p-4 text-white font-bold outline-none focus:border-primary-500" />
-    </div>
-);

@@ -31,7 +31,7 @@ const App: React.FC = () => {
   const [selectedContractForAI, setSelectedContractForAI] = useState<Contract | null>(null);
 
   useEffect(() => {
-      console.log("%c LocaMaster AI V1.5.0 - ONLINE ", "background: #4f46e5; color: white; font-weight: bold;");
+      console.log("%c LocaMaster AI V1.7.0 - ULTIMATE COMMAND ONLINE ", "background: #a855f7; color: white; font-weight: bold; border-radius: 4px; padding: 2px 10px;");
       localStorage.setItem('locamaster_contracts', JSON.stringify(contracts));
   }, [contracts]);
 
@@ -41,16 +41,15 @@ const App: React.FC = () => {
         setIsLoading(true);
         try {
           const dbContracts = await fetchContracts(); 
-          // PROTEZIONE V1.5.0: Se il cloud ha dati, li sincronizziamo. Se è vuoto, non cancelliamo nulla in locale!
           if (Array.isArray(dbContracts) && dbContracts.length > 0) {
               setContracts(dbContracts);
               setUsingRealDb(true);
           } else {
-              console.log("Cloud Database collegato ma vuoto. Protezione Locale Attiva.");
+              console.log("Database Cloud Vuoto - Protezione Locale Attiva");
               setUsingRealDb(true);
           }
         } catch (error) {
-          console.error("Cloud Error:", error);
+          console.error("Cloud Connection Error:", error);
         } finally {
           setIsLoading(false);
         }
@@ -107,14 +106,14 @@ const App: React.FC = () => {
             setCurrentView('contracts');
         }
     } catch (e: any) {
-        alert(`Errore: ${e.message}`);
+        alert(`Errore Salvataggio: ${e.message}`);
     } finally {
         setIsLoading(false);
     }
   }, [usingRealDb]);
 
   const handleDeleteContract = async (id: string) => {
-    if (window.confirm("Attenzione: procedere con l'eliminazione?")) {
+    if (window.confirm("Confermi eliminazione definitiva?")) {
         if(usingRealDb) await deleteContract(id);
         setContracts(prev => prev.filter(c => c.id !== id));
     }

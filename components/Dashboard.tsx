@@ -97,8 +97,8 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
                       <div className={`flex items-center gap-2.5 px-5 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest ${systemStatus.pro ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-slate-900 border-slate-700 text-slate-500'}`}>
                           <Key className="w-3.5 h-3.5" /> AI ENGINE: {systemStatus.pro ? 'PROFESSIONAL' : 'FREE TIER'}
                       </div>
-                      <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-primary-500/30 bg-primary-500/10 text-[10px] font-black uppercase tracking-widest text-primary-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-                          <Activity className="w-3.5 h-3.5 text-primary-500 animate-pulse" /> V1.5.0 - STABLE MASTER
+                      <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 text-[10px] font-black uppercase tracking-widest text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.3)] border-2">
+                          <Activity className="w-3.5 h-3.5 text-purple-500 animate-pulse" /> V1.7.0 - ULTIMATE COMMAND
                       </div>
                   </div>
                   
