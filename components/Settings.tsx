@@ -29,6 +29,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
   const checkKeyStatus = async () => {
     if (window.aistudio?.hasSelectedApiKey) {
         const selected = await window.aistudio.hasSelectedApiKey();
+        console.log("Verifica Chiave PRO:", selected);
         setHasPaidKey(selected);
     }
   };
@@ -36,10 +37,8 @@ export default function Settings({ onNavigate }: SettingsProps) {
   const handleOpenKeySelector = async () => {
       if (window.aistudio?.openSelectKey) {
           await window.aistudio.openSelectKey();
-          // Assumiamo successo per sbloccare la UI immediatamente
           setHasPaidKey(true);
-          // Eseguiamo un piccolo refresh dello stato dopo un istante
-          setTimeout(checkKeyStatus, 1000);
+          setTimeout(checkKeyStatus, 2000);
       }
   };
 
@@ -105,12 +104,12 @@ export default function Settings({ onNavigate }: SettingsProps) {
                             <Sparkles className="w-12 h-12" />
                         </div>
                         <h3 className="text-3xl font-black text-white mb-4 uppercase italic tracking-tighter">
-                            {hasPaidKey ? "SISTEMA AI PROFESSIONALE ATTIVO" : "POTENZIA L'INTELLIGENZA"}
+                            {hasPaidKey ? "SISTEMA AI PROFESSIONALE ATTIVO" : "SBLOCCA INTELLIGENZA PRO"}
                         </h3>
                         <p className="text-slate-400 text-lg leading-relaxed mb-8 max-w-md">
                             {hasPaidKey 
-                              ? "Stai utilizzando la quota professionale senza limiti e con massima precisione legale." 
-                              : "La versione gratuita ha limiti di velocità. Sblocca la chiave API Professionale per analisi illimitate e veloci."}
+                              ? "Quota professionale attiva: massima velocità e precisione per l'analisi dei tuoi asset." 
+                              : "Attualmente stai usando la versione Free. Passa a PRO per report istantanei e consulenza illimitata."}
                         </p>
                         
                         <div className="flex flex-wrap gap-4 justify-center">
@@ -118,10 +117,10 @@ export default function Settings({ onNavigate }: SettingsProps) {
                                 onClick={handleOpenKeySelector}
                                 className={`px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-2xl hover:scale-105 active:scale-95 ${hasPaidKey ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30' : 'bg-white text-slate-950 border-4 border-primary-500'}`}
                             >
-                                {hasPaidKey ? "MODIFICA CHIAVE PRO" : "SBLOCCA IA PRO ORA"}
+                                {hasPaidKey ? "MODIFICA CONFIGURAZIONE PRO" : "CLICCA QUI PER SBLOCCARE PRO"}
                             </button>
-                            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="px-8 py-5 bg-slate-800 text-slate-300 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-colors"><ExternalLink className="w-4 h-4" /> INFO FATTURAZIONE</a>
                         </div>
+                        <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="mt-6 flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 hover:text-primary-400 transition-colors tracking-widest"><ExternalLink className="w-3 h-3" /> INFO FATTURAZIONE E PAGAMENTI</a>
                     </div>
                  </div>
 
@@ -198,7 +197,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
                         <div className="flex gap-4">
                             <span className="text-slate-700">2</span>
                             <span className="text-emerald-500">git</span>
-                            <span className="text-white">commit -m <span className="text-amber-400">"Build Fix: V1.2.0 sblocco PRO"</span></span>
+                            <span className="text-white">commit -m <span className="text-amber-400">"Deploy: V1.3.0 Master Fix"</span></span>
                         </div>
                         <div className="flex gap-4">
                             <span className="text-slate-700">3</span>

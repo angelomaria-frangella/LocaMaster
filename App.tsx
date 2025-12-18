@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import ContractList from './components/ContractList';
@@ -31,6 +31,7 @@ const App: React.FC = () => {
   const [selectedContractForAI, setSelectedContractForAI] = useState<Contract | null>(null);
 
   useEffect(() => {
+      console.log("LocaMaster AI Bootstrapping... Version: 1.3.0");
       localStorage.setItem('locamaster_contracts', JSON.stringify(contracts));
   }, [contracts]);
 

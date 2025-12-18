@@ -28,6 +28,7 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
   useEffect(() => {
     const checkStatus = async () => {
         const isPro = window.aistudio?.hasSelectedApiKey ? await window.aistudio.hasSelectedApiKey() : false;
+        console.log("Dashboard System Check - IA PRO:", isPro);
         setSystemStatus({
             db: isSupabaseConfigured(),
             ai: !!process.env.API_KEY,
@@ -106,7 +107,7 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
                           <Key className="w-3.5 h-3.5" /> AI ENGINE: {systemStatus.pro ? 'PROFESSIONAL' : 'FREE TIER'}
                       </div>
                       <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-primary-500/30 bg-primary-500/10 text-[10px] font-black uppercase tracking-widest text-primary-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-                          <Activity className="w-3.5 h-3.5 text-primary-500 animate-pulse" /> V1.2.0 - COMMAND LIVE
+                          <Activity className="w-3.5 h-3.5 text-primary-500 animate-pulse" /> V1.3.0 - MASTER
                       </div>
                       <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-slate-800 bg-slate-900 text-[10px] font-mono font-black text-slate-500 tracking-widest">
                           <Clock className="w-3.5 h-3.5" /> {new Date().toLocaleDateString('it-IT')}
