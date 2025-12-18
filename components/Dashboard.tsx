@@ -24,11 +24,8 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
   const [aiInsights, setAiInsights] = useState<{category: string, text: string}[]>([]);
   const [isInsightsLoading, setIsInsightsLoading] = useState(false);
   const [systemStatus, setSystemStatus] = useState({ db: false, ai: false, pro: false });
-  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
-    
     const checkStatus = async () => {
         const isPro = window.aistudio?.hasSelectedApiKey ? await window.aistudio.hasSelectedApiKey() : false;
         setSystemStatus({
@@ -46,7 +43,6 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
         setIsInsightsLoading(false);
       }).catch(() => setIsInsightsLoading(false));
     }
-    return () => clearInterval(timer);
   }, [contracts, aiEnabled]);
 
   const stats = useMemo(() => {
@@ -109,11 +105,11 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
                       <div className={`flex items-center gap-2.5 px-5 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${systemStatus.pro ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-slate-900 border-slate-700 text-slate-500'}`}>
                           <Key className="w-3.5 h-3.5" /> AI ENGINE: {systemStatus.pro ? 'PROFESSIONAL' : 'FREE TIER'}
                       </div>
-                      <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          <Activity className="w-3.5 h-3.5 text-primary-500 animate-pulse" /> V1.0.3 LIVE
+                      <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-primary-500/30 bg-primary-500/10 text-[10px] font-black uppercase tracking-widest text-primary-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+                          <Activity className="w-3.5 h-3.5 text-primary-500 animate-pulse" /> V1.2.0 - COMMAND LIVE
                       </div>
-                      <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-primary-500/20 bg-primary-500/10 text-[10px] font-mono font-black text-primary-400 tracking-widest">
-                          <Clock className="w-3.5 h-3.5" /> {currentTime}
+                      <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-slate-800 bg-slate-900 text-[10px] font-mono font-black text-slate-500 tracking-widest">
+                          <Clock className="w-3.5 h-3.5" /> {new Date().toLocaleDateString('it-IT')}
                       </div>
                   </div>
                   

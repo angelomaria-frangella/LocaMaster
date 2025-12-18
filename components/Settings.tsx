@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Shield, Globe, Bell, Building, LayoutDashboard, ArrowRight, Database, Cloud, HardDrive, Sparkles, RefreshCw, ExternalLink, Key, Terminal, Github, Send } from 'lucide-react';
+import { Shield, Globe, Bell, Building, LayoutDashboard, ArrowRight, Database, Cloud, HardDrive, Sparkles, RefreshCw, ExternalLink, Terminal, Github, Send } from 'lucide-react';
 import { isSupabaseConfigured } from '../services/supabaseService';
 
 declare var window: any;
@@ -36,7 +36,10 @@ export default function Settings({ onNavigate }: SettingsProps) {
   const handleOpenKeySelector = async () => {
       if (window.aistudio?.openSelectKey) {
           await window.aistudio.openSelectKey();
+          // Assumiamo successo per sbloccare la UI immediatamente
           setHasPaidKey(true);
+          // Eseguiamo un piccolo refresh dello stato dopo un istante
+          setTimeout(checkKeyStatus, 1000);
       }
   };
 
@@ -95,40 +98,36 @@ export default function Settings({ onNavigate }: SettingsProps) {
           
           {activeTab === 'security' && (
               <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
-                 <div className="space-y-6">
-                    <h3 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-3 italic">
-                        <Sparkles className="w-6 h-6 text-primary-400" /> Power User AI Engine
-                    </h3>
-                    
-                    <div className={`p-8 rounded-[2rem] border-2 transition-all ${hasPaidKey ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
-                        <div className="flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left">
-                            <div className={`p-5 rounded-3xl ${hasPaidKey ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'} shadow-2xl`}>
-                                <Key className="w-8 h-8" />
-                            </div>
-                            <div className="flex-1">
-                                <h4 className="text-xl font-black text-white mb-2">
-                                    {hasPaidKey ? "PROFESSIONAL KEY ATTIVA" : "FREE TIER LIMITS ATTIVI"}
-                                </h4>
-                                <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                                    L'IA gratuita ha limiti severi. Seleziona una chiave API professionale (Paid Project) per analisi illimitate.
-                                </p>
-                                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                                    <button 
-                                        onClick={handleOpenKeySelector}
-                                        className="px-6 py-3 bg-white text-slate-900 rounded-xl font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
-                                    >
-                                        Sblocca IA Pro
-                                    </button>
-                                    <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="px-6 py-3 bg-slate-800 text-slate-300 rounded-xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2"><ExternalLink className="w-4 h-4" /> Info Billing</a>
-                                </div>
-                            </div>
+                 
+                 <div className={`p-10 rounded-[3rem] border-4 transition-all ${hasPaidKey ? 'bg-emerald-500/10 border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.2)]' : 'bg-primary-500/10 border-primary-500/40 shadow-[0_0_50px_rgba(99,102,241,0.2)] animate-glow'}`}>
+                    <div className="flex flex-col items-center text-center">
+                        <div className={`p-6 rounded-[2rem] mb-6 ${hasPaidKey ? 'bg-emerald-500 text-white shadow-emerald-500/50' : 'bg-primary-500 text-white shadow-primary-500/50'} shadow-2xl`}>
+                            <Sparkles className="w-12 h-12" />
+                        </div>
+                        <h3 className="text-3xl font-black text-white mb-4 uppercase italic tracking-tighter">
+                            {hasPaidKey ? "SISTEMA AI PROFESSIONALE ATTIVO" : "POTENZIA L'INTELLIGENZA"}
+                        </h3>
+                        <p className="text-slate-400 text-lg leading-relaxed mb-8 max-w-md">
+                            {hasPaidKey 
+                              ? "Stai utilizzando la quota professionale senza limiti e con massima precisione legale." 
+                              : "La versione gratuita ha limiti di velocità. Sblocca la chiave API Professionale per analisi illimitate e veloci."}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-4 justify-center">
+                            <button 
+                                onClick={handleOpenKeySelector}
+                                className={`px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-2xl hover:scale-105 active:scale-95 ${hasPaidKey ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30' : 'bg-white text-slate-950 border-4 border-primary-500'}`}
+                            >
+                                {hasPaidKey ? "MODIFICA CHIAVE PRO" : "SBLOCCA IA PRO ORA"}
+                            </button>
+                            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="px-8 py-5 bg-slate-800 text-slate-300 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-700 transition-colors"><ExternalLink className="w-4 h-4" /> INFO FATTURAZIONE</a>
                         </div>
                     </div>
                  </div>
 
                  <div className="space-y-6 border-t border-slate-800 pt-8">
                      <h3 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-3 italic">
-                        <Database className="w-6 h-6 text-emerald-400" /> Cloud Infrastructure
+                        <Database className="w-6 h-6 text-emerald-400" /> Infrastructure Link
                      </h3>
                      <div className={`p-8 rounded-[2rem] border-2 ${supabaseStatus ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-slate-950 border-slate-800'}`}>
                         <div className="flex items-start gap-5">
@@ -141,8 +140,8 @@ export default function Settings({ onNavigate }: SettingsProps) {
                                 </p>
                                 <p className="text-sm text-slate-500 mt-2">
                                     {supabaseStatus 
-                                        ? "Dati protetti e sincronizzati in tempo reale." 
-                                        : "Attenzione: i dati risiedono solo in questo browser."}
+                                        ? "Dati protetti e sincronizzati in tempo reale con il database centrale." 
+                                        : "Attenzione: i dati risiedono solo nella memoria locale di questo browser."}
                                 </p>
                             </div>
                         </div>
@@ -199,7 +198,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
                         <div className="flex gap-4">
                             <span className="text-slate-700">2</span>
                             <span className="text-emerald-500">git</span>
-                            <span className="text-white">commit -m <span className="text-amber-400">"Update: Nuove funzionalità IA"</span></span>
+                            <span className="text-white">commit -m <span className="text-amber-400">"Build Fix: V1.2.0 sblocco PRO"</span></span>
                         </div>
                         <div className="flex gap-4">
                             <span className="text-slate-700">3</span>
@@ -210,23 +209,12 @@ export default function Settings({ onNavigate }: SettingsProps) {
                     
                     <div className="mt-8 pt-6 border-t border-slate-900 flex justify-between items-center">
                         <span className="text-[10px] text-slate-500 flex items-center gap-2">
-                            <Github className="w-4 h-4" /> Ready for GitHub synchronization
+                            <Github className="w-4 h-4" /> Pronto per la sincronizzazione
                         </span>
                         <div className="flex items-center gap-2 text-emerald-500 text-[10px] font-bold animate-pulse">
                             <Send className="w-3 h-3" /> VERCEL DETECTED
                         </div>
                     </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer" className="p-6 bg-slate-950 border border-slate-800 rounded-2xl hover:border-primary-500 transition-all group">
-                        <h4 className="text-white font-black text-xs uppercase tracking-widest mb-2">Vercel Dashboard</h4>
-                        <p className="text-[10px] text-slate-500">Monitora lo stato della build e i log di produzione.</p>
-                    </a>
-                    <a href="https://github.com" target="_blank" rel="noreferrer" className="p-6 bg-slate-950 border border-slate-800 rounded-2xl hover:border-primary-500 transition-all group">
-                        <h4 className="text-white font-black text-xs uppercase tracking-widest mb-2">GitHub Repository</h4>
-                        <p className="text-[10px] text-slate-500">Gestisci i rami del codice e la cronologia modifiche.</p>
-                    </a>
                 </div>
              </div>
           )}
