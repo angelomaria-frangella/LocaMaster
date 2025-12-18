@@ -31,7 +31,7 @@ const App: React.FC = () => {
   const [selectedContractForAI, setSelectedContractForAI] = useState<Contract | null>(null);
 
   useEffect(() => {
-      console.log("LocaMaster AI Bootstrapping... Version: 1.4.0");
+      console.log("%c LocaMaster AI V1.5.0 - ONLINE ", "background: #4f46e5; color: white; font-weight: bold;");
       localStorage.setItem('locamaster_contracts', JSON.stringify(contracts));
   }, [contracts]);
 
@@ -41,16 +41,16 @@ const App: React.FC = () => {
         setIsLoading(true);
         try {
           const dbContracts = await fetchContracts(); 
-          // FIX: Se il DB è vuoto ma abbiamo dati locali, non sovrascrivere!
+          // PROTEZIONE V1.5.0: Se il cloud ha dati, li sincronizziamo. Se è vuoto, non cancelliamo nulla in locale!
           if (Array.isArray(dbContracts) && dbContracts.length > 0) {
               setContracts(dbContracts);
               setUsingRealDb(true);
-          } else if (Array.isArray(dbContracts)) {
-              console.log("Database Cloud rilevato ma vuoto. Mantengo sessione locale.");
+          } else {
+              console.log("Cloud Database collegato ma vuoto. Protezione Locale Attiva.");
               setUsingRealDb(true);
           }
         } catch (error) {
-          console.error("Cloud sync error:", error);
+          console.error("Cloud Error:", error);
         } finally {
           setIsLoading(false);
         }
@@ -121,31 +121,10 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-      if (confirm("Uscire dal sistema? Tutti i dati non sincronizzati andranno persi.")) {
+      if (confirm("Uscire dal sistema?")) {
           localStorage.removeItem('locamaster_contracts');
           window.location.reload();
       }
-  };
-
-  const renderContent = () => {
-    if (isLoading) return (
-      <div className="flex flex-col items-center justify-center h-full text-slate-400 font-black animate-pulse">
-        <Loader2 className="w-12 h-12 animate-spin text-primary-500 mb-6" />
-        Sincronizzazione Command Center...
-      </div>
-    );
-    
-    if (isAddingContract) return <AddContract initialData={editingContract} onConfirmSave={handleSaveContract} onCancel={() => setIsAddingContract(false)} />;
-
-    switch (currentView) {
-      case 'dashboard': return <Dashboard contracts={contracts} deadlines={deadlines} onAddContract={() => setIsAddingContract(true)} aiEnabled={true} />;
-      case 'contracts': return <ContractList contracts={contracts} onAddContract={() => setIsAddingContract(true)} onOpenAI={c => { setSelectedContractForAI(c); setCurrentView('ai-advisor'); }} onEditContract={handleEditContract} onDeleteContract={handleDeleteContract} />;
-      case 'properties': return <PropertyList contracts={contracts} />;
-      case 'ai-advisor': return <AIAdvisor contracts={contracts} focusedContract={selectedContractForAI} onClearFocus={() => setSelectedContractForAI(null)} />;
-      case 'calendar': return <CalendarView deadlines={deadlines} />;
-      case 'settings': return <Settings onNavigate={handleNavigation} />;
-      default: return <Dashboard contracts={contracts} deadlines={deadlines} onAddContract={() => setIsAddingContract(true)} aiEnabled={true} />;
-    }
   };
 
   return (
@@ -160,7 +139,23 @@ const App: React.FC = () => {
             <span className="font-black text-xl tracking-tighter uppercase italic">LocaMaster <span className="text-primary-500">AI</span></span>
           </div>
           <div className="flex-1 overflow-y-auto p-6 md:p-12 pb-40">
-              {renderContent()}
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 font-black animate-pulse">
+                  <Loader2 className="w-12 h-12 animate-spin text-primary-500 mb-6" />
+                  Sincronizzazione Command Center...
+                </div>
+              ) : isAddingContract ? (
+                <AddContract initialData={editingContract} onConfirmSave={handleSaveContract} onCancel={() => setIsAddingContract(false)} />
+              ) : (
+                <>
+                  {currentView === 'dashboard' && <Dashboard contracts={contracts} deadlines={deadlines} onAddContract={() => setIsAddingContract(true)} aiEnabled={true} />}
+                  {currentView === 'contracts' && <ContractList contracts={contracts} onAddContract={() => setIsAddingContract(true)} onOpenAI={c => { setSelectedContractForAI(c); setCurrentView('ai-advisor'); }} onEditContract={handleEditContract} onDeleteContract={handleDeleteContract} />}
+                  {currentView === 'properties' && <PropertyList contracts={contracts} />}
+                  {currentView === 'ai-advisor' && <AIAdvisor contracts={contracts} focusedContract={selectedContractForAI} onClearFocus={() => setSelectedContractForAI(null)} />}
+                  {currentView === 'calendar' && <CalendarView deadlines={deadlines} />}
+                  {currentView === 'settings' && <Settings onNavigate={handleNavigation} />}
+                </>
+              )}
           </div>
         </main>
     </div>

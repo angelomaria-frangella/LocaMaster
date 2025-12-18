@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Shield, Globe, Bell, Building, LayoutDashboard, ArrowRight, Database, Cloud, HardDrive, Sparkles, RefreshCw, ExternalLink, Terminal, Github, Send, Trash2 } from 'lucide-react';
+import { Shield, Globe, Bell, Building, LayoutDashboard, ArrowRight, Database, Cloud, HardDrive, Sparkles, RefreshCw, Terminal, Trash2 } from 'lucide-react';
 import { isSupabaseConfigured } from '../services/supabaseService';
 
 declare var window: any;
@@ -20,24 +20,25 @@ export default function Settings({ onNavigate }: SettingsProps) {
   const [studioCity, setStudioCity] = useState('');
 
   useEffect(() => {
-    loadStudioData();
-    checkKeyStatus();
+    setStudioName(localStorage.getItem('studio_name') || 'Studio Commercialista');
+    setStudioPiva(localStorage.getItem('studio_piva') || '');
+    setStudioCity(localStorage.getItem('studio_city') || '');
     setSupabaseStatus(isSupabaseConfigured());
     setGoogleClientId(localStorage.getItem('google_client_id') || '');
+    
+    const checkKeyStatus = async () => {
+        if (window.aistudio?.hasSelectedApiKey) {
+            const selected = await window.aistudio.hasSelectedApiKey();
+            setHasPaidKey(selected);
+        }
+    };
+    checkKeyStatus();
   }, []);
-
-  const checkKeyStatus = async () => {
-    if (window.aistudio?.hasSelectedApiKey) {
-        const selected = await window.aistudio.hasSelectedApiKey();
-        setHasPaidKey(selected);
-    }
-  };
 
   const handleOpenKeySelector = async () => {
       if (window.aistudio?.openSelectKey) {
           await window.aistudio.openSelectKey();
           setHasPaidKey(true);
-          setTimeout(checkKeyStatus, 2000);
       }
   };
 
@@ -46,12 +47,6 @@ export default function Settings({ onNavigate }: SettingsProps) {
           localStorage.clear();
           window.location.reload();
       }
-  };
-
-  const loadStudioData = () => {
-      setStudioName(localStorage.getItem('studio_name') || 'Studio Commercialista');
-      setStudioPiva(localStorage.getItem('studio_piva') || '');
-      setStudioCity(localStorage.getItem('studio_city') || '');
   };
 
   const handleSaveStudioData = () => {
@@ -104,11 +99,8 @@ export default function Settings({ onNavigate }: SettingsProps) {
         </div>
 
         <div className="flex-1 bg-slate-900 border border-slate-800 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/5 blur-[100px] rounded-full"></div>
-          
           {activeTab === 'security' && (
               <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
-                 
                  <div className={`p-10 rounded-[3rem] border-4 transition-all ${hasPaidKey ? 'bg-emerald-500/10 border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.2)]' : 'bg-primary-500/10 border-primary-500/40 shadow-[0_0_50px_rgba(99,102,241,0.2)] animate-glow'}`}>
                     <div className="flex flex-col items-center text-center">
                         <div className={`p-6 rounded-[2rem] mb-6 ${hasPaidKey ? 'bg-emerald-500 text-white shadow-emerald-500/50' : 'bg-primary-500 text-white shadow-primary-500/50'} shadow-2xl`}>
@@ -122,16 +114,12 @@ export default function Settings({ onNavigate }: SettingsProps) {
                               ? "Quota professionale attiva: massima velocità e precisione per l'analisi dei tuoi asset." 
                               : "Passa a PRO per report istantanei e consulenza illimitata senza rallentamenti."}
                         </p>
-                        
-                        <div className="flex flex-wrap gap-4 justify-center">
-                            <button 
-                                onClick={handleOpenKeySelector}
-                                className={`px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-2xl hover:scale-105 active:scale-95 ${hasPaidKey ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30' : 'bg-white text-slate-950 border-4 border-primary-500'}`}
-                            >
-                                {hasPaidKey ? "GESTISCI CHIAVE PRO" : "CLICCA QUI PER SBLOCCARE"}
-                            </button>
-                        </div>
-                        <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="mt-6 flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 hover:text-primary-400 transition-colors tracking-widest"><ExternalLink className="w-3 h-3" /> INFO FATTURAZIONE GOOGLE CLOUD</a>
+                        <button 
+                            onClick={handleOpenKeySelector}
+                            className={`px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-2xl hover:scale-105 active:scale-95 ${hasPaidKey ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30' : 'bg-white text-slate-950 border-4 border-primary-500'}`}
+                        >
+                            {hasPaidKey ? "GESTISCI CHIAVE PRO" : "CLICCA QUI PER SBLOCCARE"}
+                        </button>
                     </div>
                  </div>
 
@@ -147,11 +135,6 @@ export default function Settings({ onNavigate }: SettingsProps) {
                             <div>
                                 <p className="font-black text-white text-lg uppercase tracking-tight">
                                     Status: {supabaseStatus ? 'Cloud Sync Online' : 'Local Storage Only'}
-                                </p>
-                                <p className="text-sm text-slate-500 mt-2">
-                                    {supabaseStatus 
-                                        ? "Dati protetti e sincronizzati in tempo reale con il database centrale." 
-                                        : "Attenzione: i dati risiedono solo nella memoria locale di questo browser."}
                                 </p>
                             </div>
                         </div>
@@ -177,9 +160,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
           {activeTab === 'integrations' && (
              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                 <h3 className="text-2xl font-black text-white uppercase italic">Workspace Integration</h3>
-                <div className="p-6 bg-slate-950 rounded-2xl border border-slate-800">
-                    <InputField label="Google Client ID" value={googleClientId} onChange={setGoogleClientId} placeholder="xxxxxx-xxxxxxxx.apps.googleusercontent.com" />
-                </div>
+                <InputField label="Google Client ID" value={googleClientId} onChange={setGoogleClientId} placeholder="xxxxxx-xxxxxxxx.apps.googleusercontent.com" />
                 <button onClick={handleSaveGoogleConfig} className="flex items-center gap-3 bg-primary-600 hover:bg-primary-500 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Salva Configurazione</button>
              </div>
           )}
@@ -189,51 +170,13 @@ export default function Settings({ onNavigate }: SettingsProps) {
                 <h3 className="text-2xl font-black text-white uppercase italic flex items-center gap-3">
                     <Terminal className="w-8 h-8 text-primary-500" /> Deployment Console
                 </h3>
-                
                 <div className="bg-black rounded-3xl p-8 border border-slate-800 font-mono shadow-inner relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-500/40 to-transparent"></div>
-                    <div className="flex items-center gap-2 mb-6">
-                        <div className="w-3 h-3 rounded-full bg-rose-500"></div>
-                        <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                        <span className="ml-4 text-[10px] text-slate-600 uppercase font-black tracking-widest">Git Update Routine</span>
-                    </div>
-                    
                     <div className="space-y-4 text-sm">
-                        <div className="flex gap-4">
-                            <span className="text-slate-700">1</span>
-                            <span className="text-emerald-500">git</span>
-                            <span className="text-white">add .</span>
-                        </div>
-                        <div className="flex gap-4">
-                            <span className="text-slate-700">2</span>
-                            <span className="text-emerald-500">git</span>
-                            <span className="text-white">commit -m <span className="text-amber-400">"Deploy V1.4.0 Stable Master"</span></span>
-                        </div>
-                        <div className="flex gap-4">
-                            <span className="text-slate-700">3</span>
-                            <span className="text-emerald-500">git</span>
-                            <span className="text-white">push origin main</span>
-                        </div>
-                    </div>
-                    
-                    <div className="mt-8 pt-6 border-t border-slate-900 flex justify-between items-center">
-                        <span className="text-[10px] text-slate-500 flex items-center gap-2">
-                            <Github className="w-4 h-4" /> Pronto per la sincronizzazione
-                        </span>
-                        <div className="flex items-center gap-2 text-emerald-500 text-[10px] font-bold animate-pulse">
-                            <Send className="w-3 h-3" /> VERCEL DETECTED
-                        </div>
+                        <div className="flex gap-4 text-white"><span>$ git add .</span></div>
+                        <div className="flex gap-4 text-white"><span>$ git commit -m "V1.5.0 Deployment"</span></div>
+                        <div className="flex gap-4 text-white"><span>$ git push origin main</span></div>
                     </div>
                 </div>
-             </div>
-          )}
-
-          {activeTab === 'notifications' && (
-             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 flex flex-col items-center justify-center py-20 opacity-40">
-                <Bell className="w-16 h-16 text-slate-500 mb-4" />
-                <h3 className="text-xl font-black text-white uppercase italic tracking-widest">Notification Engine</h3>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-[0.3em]">Modulo in fase di rilascio</p>
              </div>
           )}
         </div>
