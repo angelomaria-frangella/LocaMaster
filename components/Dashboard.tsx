@@ -4,11 +4,13 @@ import { Contract, DeadlineEvent, UrgencyLevel } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { 
   AlertTriangle, Euro, Briefcase, Zap, TrendingUp, 
-  FilePlus, BrainCircuit, Clock, Database, ShieldAlert, Target, Activity
+  FilePlus, BrainCircuit, Clock, Database, ShieldAlert, Target, Activity, Key
 } from 'lucide-react';
 import ReportGenerator from './ReportGenerator';
 import { generatePortfolioInsights } from '../services/geminiService';
 import { isSupabaseConfigured } from '../services/supabaseService';
+
+declare var window: any;
 
 interface DashboardProps {
   contracts: Contract[];
@@ -21,15 +23,21 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [aiInsights, setAiInsights] = useState<{category: string, text: string}[]>([]);
   const [isInsightsLoading, setIsInsightsLoading] = useState(false);
-  const [systemStatus, setSystemStatus] = useState({ db: false, ai: false });
+  const [systemStatus, setSystemStatus] = useState({ db: false, ai: false, pro: false });
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
-    setSystemStatus({
-        db: isSupabaseConfigured(),
-        ai: !!process.env.API_KEY
-    });
+    
+    const checkStatus = async () => {
+        const isPro = window.aistudio?.hasSelectedApiKey ? await window.aistudio.hasSelectedApiKey() : false;
+        setSystemStatus({
+            db: isSupabaseConfigured(),
+            ai: !!process.env.API_KEY,
+            pro: isPro
+        });
+    };
+    checkStatus();
 
     if (aiEnabled && contracts.length > 0 && process.env.API_KEY) {
       setIsInsightsLoading(true);
@@ -96,10 +104,13 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
               <div className="space-y-10">
                   <div className="flex flex-wrap gap-4">
                       <div className={`flex items-center gap-2.5 px-5 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${systemStatus.db ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-rose-500/10 border-rose-500/20 text-rose-500'}`}>
-                          <Database className="w-3.5 h-3.5" /> CLOUD ENGINE: {systemStatus.db ? 'CONNECTED' : 'LOCAL'}
+                          <Database className="w-3.5 h-3.5" /> CLOUD: {systemStatus.db ? 'CONNECTED' : 'LOCAL'}
+                      </div>
+                      <div className={`flex items-center gap-2.5 px-5 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${systemStatus.pro ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-slate-900 border-slate-700 text-slate-500'}`}>
+                          <Key className="w-3.5 h-3.5" /> AI ENGINE: {systemStatus.pro ? 'PROFESSIONAL' : 'FREE TIER'}
                       </div>
                       <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          <Activity className="w-3.5 h-3.5 text-primary-500 animate-pulse" /> SYSTEM CLOCK: {currentTime}
+                          <Activity className="w-3.5 h-3.5 text-primary-500 animate-pulse" /> CLOCK: {currentTime}
                       </div>
                   </div>
                   
