@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Contract, DeadlineEvent, UrgencyLevel } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { 
@@ -110,7 +110,10 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
                           <Key className="w-3.5 h-3.5" /> AI ENGINE: {systemStatus.pro ? 'PROFESSIONAL' : 'FREE TIER'}
                       </div>
                       <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          <Activity className="w-3.5 h-3.5 text-primary-500 animate-pulse" /> CLOCK: {currentTime}
+                          <Activity className="w-3.5 h-3.5 text-primary-500 animate-pulse" /> V1.0.3 LIVE
+                      </div>
+                      <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-primary-500/20 bg-primary-500/10 text-[10px] font-mono font-black text-primary-400 tracking-widest">
+                          <Clock className="w-3.5 h-3.5" /> {currentTime}
                       </div>
                   </div>
                   

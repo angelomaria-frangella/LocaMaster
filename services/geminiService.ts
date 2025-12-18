@@ -12,7 +12,6 @@ export const generatePortfolioInsights = async (contracts: Contract[]): Promise<
     ];
     
     try {
-        // Istanza locale: usa la chiave API più recente iniettata dall'ambiente o dal selettore
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const dataContext = contracts.map(c => ({
             addr: c.propertyAddress,
@@ -44,7 +43,6 @@ export const generatePortfolioInsights = async (contracts: Contract[]): Promise<
         return JSON.parse(response.text || "[]");
     } catch (e: any) {
         console.error("Gemini Error:", e);
-        // Fallback elegante se la quota è esaurita
         return [
             { category: "SISTEMA", text: "Quota API esaurita. Seleziona una chiave PRO nelle Impostazioni." },
             { category: "RENDIMENTO", text: "Analisi locale: Rendimento medio stimato al 4.2% lordo." }
@@ -93,16 +91,22 @@ export const extractContractData = async (base64Data: string, mimeType: string):
 export const generateFiscalReport = async (contracts: Contract[], reportType: string, subjectName: string = "Generale", studioSettings: any = {}) => {
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const studioInfo = studioSettings.name ? `Studio: ${studioSettings.name}, P.IVA: ${studioSettings.piva}, Città: ${studioSettings.city}` : "Studio Professionale";
         
+        // Uso della variabile studioSettings per risolvere il warning e migliorare il prompt
+        const studioInfo = studioSettings?.name 
+            ? `Studio Professionale: ${studioSettings.name}, P.IVA: ${studioSettings.piva}, Località: ${studioSettings.city}` 
+            : "Documento emesso da LocaMaster AI Intelligence System";
+
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
-            config: { systemInstruction: "Sei un consulente fiscale esperto. Genera un report fiscale HTML elegante e professionale, strutturato per un documento ufficiale da consegnare a un cliente." },
-            contents: [{ role: 'user', parts: [{ text: `Genera Report ${reportType} per ${subjectName}. Intestazione Studio: ${studioInfo}. Dati contratti: ${JSON.stringify(contracts)}` }] }]
+            config: { 
+                systemInstruction: `Sei un consulente fiscale Real Estate di alto livello. Genera report in HTML pulito. Intestazione richiesta: ${studioInfo}.` 
+            },
+            contents: [{ role: 'user', parts: [{ text: `Genera Report ${reportType} per il soggetto ${subjectName}. Dati contratti: ${JSON.stringify(contracts)}` }] }]
         });
         return response.text;
     } catch (e) {
         console.error("Report generation error:", e);
-        return "<h2 style='color: #e11d48;'>Errore generazione report</h2><p>Verifica la quota API o la chiave professionale nelle impostazioni.</p>";
+        return "<div style='color:red; padding:20px; border:1px solid red; border-radius:10px;'><h3>Errore Generazione Report</h3><p>La quota API gratuita è esaurita. Configura una chiave PRO nelle Impostazioni.</p></div>";
     }
 };
