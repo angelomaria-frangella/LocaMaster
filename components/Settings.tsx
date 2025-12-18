@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Shield, Globe, Bell, Building, LayoutDashboard, ArrowRight, Database, Cloud, HardDrive, Sparkles, RefreshCw, ExternalLink, Terminal, Github, Send } from 'lucide-react';
+import { Shield, Globe, Bell, Building, LayoutDashboard, ArrowRight, Database, Cloud, HardDrive, Sparkles, RefreshCw, ExternalLink, Terminal, Github, Send, Trash2 } from 'lucide-react';
 import { isSupabaseConfigured } from '../services/supabaseService';
 
 declare var window: any;
@@ -29,7 +29,6 @@ export default function Settings({ onNavigate }: SettingsProps) {
   const checkKeyStatus = async () => {
     if (window.aistudio?.hasSelectedApiKey) {
         const selected = await window.aistudio.hasSelectedApiKey();
-        console.log("Verifica Chiave PRO:", selected);
         setHasPaidKey(selected);
     }
   };
@@ -39,6 +38,13 @@ export default function Settings({ onNavigate }: SettingsProps) {
           await window.aistudio.openSelectKey();
           setHasPaidKey(true);
           setTimeout(checkKeyStatus, 2000);
+      }
+  };
+
+  const handleResetSystem = () => {
+      if(confirm("Questa azione pulirà la cache locale e riavvierà il sistema. Continuare?")) {
+          localStorage.clear();
+          window.location.reload();
       }
   };
 
@@ -90,6 +96,11 @@ export default function Settings({ onNavigate }: SettingsProps) {
               <span className="font-black text-xs uppercase tracking-widest">{item.label}</span>
             </button>
           ))}
+          
+          <button onClick={handleResetSystem} className="w-full flex items-center p-4 rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-all mt-10 border border-rose-500/20">
+              <Trash2 className="w-5 h-5 mr-4" />
+              <span className="font-black text-xs uppercase tracking-widest">Pulisci Cache Sistema</span>
+          </button>
         </div>
 
         <div className="flex-1 bg-slate-900 border border-slate-800 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative">
@@ -104,12 +115,12 @@ export default function Settings({ onNavigate }: SettingsProps) {
                             <Sparkles className="w-12 h-12" />
                         </div>
                         <h3 className="text-3xl font-black text-white mb-4 uppercase italic tracking-tighter">
-                            {hasPaidKey ? "SISTEMA AI PROFESSIONALE ATTIVO" : "SBLOCCA INTELLIGENZA PRO"}
+                            {hasPaidKey ? "IA PROFESSIONALE ATTIVA" : "SBLOCCA INTELLIGENZA PRO"}
                         </h3>
                         <p className="text-slate-400 text-lg leading-relaxed mb-8 max-w-md">
                             {hasPaidKey 
                               ? "Quota professionale attiva: massima velocità e precisione per l'analisi dei tuoi asset." 
-                              : "Attualmente stai usando la versione Free. Passa a PRO per report istantanei e consulenza illimitata."}
+                              : "Passa a PRO per report istantanei e consulenza illimitata senza rallentamenti."}
                         </p>
                         
                         <div className="flex flex-wrap gap-4 justify-center">
@@ -117,10 +128,10 @@ export default function Settings({ onNavigate }: SettingsProps) {
                                 onClick={handleOpenKeySelector}
                                 className={`px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-2xl hover:scale-105 active:scale-95 ${hasPaidKey ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30' : 'bg-white text-slate-950 border-4 border-primary-500'}`}
                             >
-                                {hasPaidKey ? "MODIFICA CONFIGURAZIONE PRO" : "CLICCA QUI PER SBLOCCARE PRO"}
+                                {hasPaidKey ? "GESTISCI CHIAVE PRO" : "CLICCA QUI PER SBLOCCARE"}
                             </button>
                         </div>
-                        <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="mt-6 flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 hover:text-primary-400 transition-colors tracking-widest"><ExternalLink className="w-3 h-3" /> INFO FATTURAZIONE E PAGAMENTI</a>
+                        <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="mt-6 flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 hover:text-primary-400 transition-colors tracking-widest"><ExternalLink className="w-3 h-3" /> INFO FATTURAZIONE GOOGLE CLOUD</a>
                     </div>
                  </div>
 
@@ -197,7 +208,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
                         <div className="flex gap-4">
                             <span className="text-slate-700">2</span>
                             <span className="text-emerald-500">git</span>
-                            <span className="text-white">commit -m <span className="text-amber-400">"Deploy: V1.3.0 Master Fix"</span></span>
+                            <span className="text-white">commit -m <span className="text-amber-400">"Deploy V1.4.0 Stable Master"</span></span>
                         </div>
                         <div className="flex gap-4">
                             <span className="text-slate-700">3</span>

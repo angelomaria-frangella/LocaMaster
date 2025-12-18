@@ -31,7 +31,7 @@ const App: React.FC = () => {
   const [selectedContractForAI, setSelectedContractForAI] = useState<Contract | null>(null);
 
   useEffect(() => {
-      console.log("LocaMaster AI Bootstrapping... Version: 1.3.0");
+      console.log("LocaMaster AI Bootstrapping... Version: 1.4.0");
       localStorage.setItem('locamaster_contracts', JSON.stringify(contracts));
   }, [contracts]);
 
@@ -41,8 +41,12 @@ const App: React.FC = () => {
         setIsLoading(true);
         try {
           const dbContracts = await fetchContracts(); 
-          if (Array.isArray(dbContracts)) {
+          // FIX: Se il DB è vuoto ma abbiamo dati locali, non sovrascrivere!
+          if (Array.isArray(dbContracts) && dbContracts.length > 0) {
               setContracts(dbContracts);
+              setUsingRealDb(true);
+          } else if (Array.isArray(dbContracts)) {
+              console.log("Database Cloud rilevato ma vuoto. Mantengo sessione locale.");
               setUsingRealDb(true);
           }
         } catch (error) {
@@ -117,7 +121,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-      if (confirm("Uscire dal sistema?")) {
+      if (confirm("Uscire dal sistema? Tutti i dati non sincronizzati andranno persi.")) {
           localStorage.removeItem('locamaster_contracts');
           window.location.reload();
       }
@@ -127,7 +131,7 @@ const App: React.FC = () => {
     if (isLoading) return (
       <div className="flex flex-col items-center justify-center h-full text-slate-400 font-black animate-pulse">
         <Loader2 className="w-12 h-12 animate-spin text-primary-500 mb-6" />
-        Sincronizzazione in corso...
+        Sincronizzazione Command Center...
       </div>
     );
     
@@ -153,7 +157,7 @@ const App: React.FC = () => {
         <main className="flex-1 flex flex-col h-full overflow-hidden relative">
           <div className="lg:hidden flex items-center p-6 border-b border-white/5 bg-slate-950 z-30 justify-between">
             <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-primary-500"><Menu className="w-8 h-8" /></button>
-            <span className="font-black text-xl tracking-tighter uppercase">LocaMaster AI</span>
+            <span className="font-black text-xl tracking-tighter uppercase italic">LocaMaster <span className="text-primary-500">AI</span></span>
           </div>
           <div className="flex-1 overflow-y-auto p-6 md:p-12 pb-40">
               {renderContent()}
