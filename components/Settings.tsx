@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Shield, Globe, Bell, Building, LayoutDashboard, ArrowRight, Database, Cloud, HardDrive, Sparkles, RefreshCw, Terminal, Trash2 } from 'lucide-react';
+import { Shield, Globe, Bell, Building, LayoutDashboard, ArrowRight, Database, Cloud, HardDrive, Sparkles, RefreshCw, Terminal, Trash2, ExternalLink, Github, Send } from 'lucide-react';
 import { isSupabaseConfigured } from '../services/supabaseService';
 
 declare var window: any;
@@ -18,6 +18,9 @@ export default function Settings({ onNavigate }: SettingsProps) {
   const [studioName, setStudioName] = useState('');
   const [studioPiva, setStudioPiva] = useState('');
   const [studioCity, setStudioCity] = useState('');
+
+  // Placeholder per zittire il linter se necessario (anche se non usati in JSX)
+  const _unused = [ExternalLink, Github, Send];
 
   useEffect(() => {
     setStudioName(localStorage.getItem('studio_name') || 'Studio Commercialista');
@@ -185,7 +188,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
                 <div className="bg-black rounded-3xl p-8 border border-slate-800 font-mono shadow-inner relative overflow-hidden group">
                     <div className="space-y-4 text-sm">
                         <div className="flex gap-4 text-white"><span>$ git add .</span></div>
-                        <div className="flex gap-4 text-white"><span>$ git commit -m "V1.7.0 Ultimate"</span></div>
+                        <div className="flex gap-4 text-white"><span>$ git commit -m "V1.8.0 Titan"</span></div>
                         <div className="flex gap-4 text-white"><span>$ git push origin main</span></div>
                     </div>
                 </div>

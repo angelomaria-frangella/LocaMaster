@@ -4,7 +4,8 @@ import { Contract, DeadlineEvent, UrgencyLevel } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { 
   AlertTriangle, Euro, Briefcase, Zap, TrendingUp, 
-  FilePlus, BrainCircuit, Clock, Database, ShieldAlert, Target, Activity, Key
+  FilePlus, BrainCircuit, Clock, Database, ShieldAlert, Target, Activity, Key,
+  Radio, Cpu, Layout, Globe
 } from 'lucide-react';
 import ReportGenerator from './ReportGenerator';
 import { generatePortfolioInsights } from '../services/geminiService';
@@ -67,162 +68,154 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
     return results;
   }, [deadlines]);
 
-  const getInsightIcon = (category: string) => {
-    switch (category.toUpperCase()) {
-        case 'RISCHIO': return <ShieldAlert className="w-5 h-5 text-rose-400" />;
-        case 'RENDIMENTO': return <TrendingUp className="w-5 h-5 text-emerald-400" />;
-        default: return <Target className="w-5 h-5 text-primary-400" />;
-    }
-  };
-
-  const getInsightBg = (category: string) => {
-    switch (category.toUpperCase()) {
-        case 'RISCHIO': return 'bg-rose-500/10 border-rose-500/20 text-rose-100';
-        case 'RENDIMENTO': return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-100';
-        default: return 'bg-primary-500/10 border-primary-500/20 text-primary-100';
-    }
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in duration-1000 pb-20">
       {isReportModalOpen && <ReportGenerator contracts={contracts} onClose={() => setIsReportModalOpen(false)} aiEnabled={aiEnabled} />}
 
-      <div className="relative p-10 lg:p-16 rounded-[3rem] lg:rounded-[5rem] bg-slate-950 border border-white/10 shadow-3xl overflow-hidden group">
-          <div className="relative z-10 flex flex-col lg:flex-row justify-between gap-12">
-              <div className="space-y-10">
-                  <div className="flex flex-wrap gap-4">
-                      <div className={`flex items-center gap-2.5 px-5 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest ${systemStatus.db ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-500'}`}>
-                          <Database className="w-3.5 h-3.5" /> CLOUD: {systemStatus.db ? 'CONNECTED' : 'LOCAL'}
+      {/* --- TITAN COCKPIT HEADER --- */}
+      <div className="relative p-1 rounded-[4rem] bg-gradient-to-br from-slate-800 via-slate-950 to-slate-900 border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-primary-600/5 blur-[120px] rounded-full"></div>
+          
+          <div className="relative z-10 p-10 lg:p-14 flex flex-col xl:flex-row justify-between gap-12">
+              <div className="space-y-8 flex-1">
+                  <div className="flex flex-wrap gap-3">
+                      <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${systemStatus.db ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-500'}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${systemStatus.db ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+                          SYSTEM: {systemStatus.db ? 'ONLINE' : 'LOCAL_MODE'}
                       </div>
-                      <div className={`flex items-center gap-2.5 px-5 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest ${systemStatus.pro ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-slate-900 border-slate-700 text-slate-500'}`}>
-                          <Key className="w-3.5 h-3.5" /> AI ENGINE: {systemStatus.pro ? 'PROFESSIONAL' : 'FREE TIER'}
+                      <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-[9px] font-black uppercase tracking-widest text-indigo-400">
+                          <Radio className="w-3 h-3 animate-pulse" /> ENGINE: {systemStatus.pro ? 'PRO_TITAN' : 'FLASH_CORE'}
                       </div>
-                      <div className="flex items-center gap-2.5 px-5 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 text-[10px] font-black uppercase tracking-widest text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.3)] border-2">
-                          <Activity className="w-3.5 h-3.5 text-purple-500 animate-pulse" /> V1.7.0 - ULTIMATE COMMAND
+                      <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary-500/40 bg-primary-500/20 text-[9px] font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]">
+                          <Cpu className="w-3 h-3" /> V1.8.0 TITAN EDITION
                       </div>
                   </div>
                   
-                  <div className="space-y-4">
-                    <h1 className="text-7xl lg:text-9xl font-black text-white tracking-tighter leading-[0.85] italic drop-shadow-2xl">
-                        Executive<br/><span className="text-primary-500 not-italic">Command.</span>
+                  <div className="space-y-2">
+                    <h1 className="text-6xl lg:text-8xl font-black text-white tracking-tighter leading-none italic uppercase">
+                        Master<br/><span className="text-primary-500 not-italic">Cockpit.</span>
                     </h1>
-                    <p className="text-slate-400 font-bold text-xl max-w-lg border-l-4 border-primary-500/40 pl-8 py-3 leading-relaxed">
-                        Benvenuto, Dott. Frangella.<br/><span className="text-white">Radar attivo su {contracts.length} asset.</span>
-                    </p>
+                    <div className="flex items-center gap-4 mt-6">
+                        <div className="h-px flex-1 bg-gradient-to-r from-primary-500/50 to-transparent"></div>
+                        <p className="text-slate-400 font-bold text-sm uppercase tracking-[0.3em]">Telemetry Active Unit 01</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <TelemetryUnit label="DB SYNC" value={systemStatus.db ? "STABLE" : "OFF"} color={systemStatus.db ? "emerald" : "rose"} />
+                      <TelemetryUnit label="IA CORES" value={systemStatus.pro ? "32x" : "8x"} color="indigo" />
+                      <TelemetryUnit label="ASSETS" value={contracts.length.toString()} color="primary" />
+                      <TelemetryUnit label="THREATS" value={stats.criticalDeadlines.toString()} color={stats.criticalDeadlines > 0 ? "rose" : "emerald"} />
                   </div>
               </div>
 
-              <div className="flex flex-col gap-5 min-w-[320px] justify-center">
-                  <button onClick={onAddContract} className="w-full py-8 bg-primary-600 hover:bg-primary-500 text-white rounded-[2.5rem] font-black text-2xl shadow-xl flex items-center justify-center gap-5 transition-all active:scale-95 group/btn">
-                      <FilePlus className="w-10 h-10 group-hover/btn:rotate-12 transition-transform" /> NUOVA PRATICA
+              <div className="flex flex-col gap-4 min-w-[340px] justify-center relative">
+                  <div className="absolute -inset-4 bg-primary-500/5 blur-3xl rounded-full"></div>
+                  <button onClick={onAddContract} className="relative w-full py-10 bg-primary-600 hover:bg-primary-500 text-white rounded-[3rem] font-black text-2xl shadow-[0_20px_40px_rgba(79,70,229,0.4)] flex items-center justify-center gap-6 transition-all active:scale-95 group/btn border-t border-white/20">
+                      <FilePlus className="w-10 h-10 group-hover/btn:rotate-90 transition-transform duration-500" /> NUOVA PRATICA
                   </button>
-                  <button onClick={() => setIsReportModalOpen(true)} className="w-full py-6 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-[2rem] font-bold text-lg flex items-center justify-center gap-4 transition-all border border-white/10 shadow-2xl">
-                      <Zap className="w-6 h-6 text-amber-400 shadow-amber-400/50" /> SMART REPORT AI
+                  <button onClick={() => setIsReportModalOpen(true)} className="relative w-full py-6 bg-slate-900/80 hover:bg-slate-800 text-slate-300 rounded-[2rem] font-bold text-lg flex items-center justify-center gap-4 transition-all border border-white/10 backdrop-blur-md">
+                      <Zap className="w-6 h-6 text-amber-400" /> SMART REPORT AI
                   </button>
               </div>
           </div>
       </div>
 
+      {/* --- DASHBOARD GRID --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 p-12 bg-slate-900/50 border border-white/5 rounded-[4rem] relative overflow-hidden shadow-2xl backdrop-blur-xl">
-              <h3 className="font-black text-white text-3xl uppercase tracking-tighter flex items-center gap-6 italic mb-10">
-                  <BrainCircuit className="w-12 h-12 text-primary-400 animate-pulse" /> Mission Intel Briefing
+          {/* AI INSIGHTS BOX */}
+          <div className="lg:col-span-2 p-10 bg-slate-900/40 border border-white/5 rounded-[4rem] relative overflow-hidden shadow-2xl backdrop-blur-xl">
+              <div className="absolute top-0 right-0 p-8 opacity-10"><BrainCircuit className="w-32 h-32 text-primary-500" /></div>
+              <h3 className="font-black text-white text-2xl uppercase tracking-tighter flex items-center gap-5 italic mb-10">
+                  <Radio className="w-8 h-8 text-primary-400 animate-pulse" /> Mission Briefing
               </h3>
-              <div className="grid grid-cols-1 gap-6">
+              <div className="grid grid-cols-1 gap-5">
                   {isInsightsLoading ? (
-                      [1,2,3].map(i => <div key={i} className="h-28 bg-white/5 rounded-[2.5rem] animate-pulse"></div>)
+                      [1,2].map(i => <div key={i} className="h-24 bg-white/5 rounded-[2rem] animate-pulse"></div>)
                   ) : aiInsights.length > 0 ? (
                       aiInsights.map((insight, i) => (
-                          <div key={i} className={`p-8 rounded-[3rem] border flex gap-8 items-start transition-all hover:translate-x-4 hover:bg-white/5 ${getInsightBg(insight.category)} shadow-xl`}>
-                              <div className="p-5 rounded-3xl bg-black/40 mt-1 shadow-2xl border border-white/5">{getInsightIcon(insight.category)}</div>
+                          <div key={i} className={`p-6 rounded-[2.5rem] border flex gap-6 items-center transition-all hover:bg-white/5 ${insight.category === 'RISCHIO' ? 'bg-rose-500/5 border-rose-500/20' : 'bg-emerald-500/5 border-emerald-500/20'}`}>
+                              <div className={`p-4 rounded-2xl bg-black/40 ${insight.category === 'RISCHIO' ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                  {insight.category === 'RISCHIO' ? <ShieldAlert className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
+                              </div>
                               <div className="flex-1">
-                                  <span className="text-[11px] font-black uppercase tracking-[0.5em] opacity-60 mb-3 block">{insight.category}</span>
-                                  <p className="text-xl font-bold leading-relaxed text-white/95">{insight.text}</p>
+                                  <span className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40 mb-1 block">{insight.category}</span>
+                                  <p className="text-lg font-bold text-white/90 leading-tight">{insight.text}</p>
                               </div>
                           </div>
                       ))
                   ) : (
-                    <div className="py-20 text-center space-y-6 opacity-40">
-                        <ShieldAlert className="w-16 h-16 text-slate-700 mx-auto" />
-                        <p className="text-slate-500 font-black italic uppercase tracking-[0.4em] text-sm">Parametri IA in fase di sincronizzazione...</p>
-                    </div>
+                    <div className="py-10 text-center opacity-30">In attesa di parametri di volo...</div>
                   )}
               </div>
           </div>
 
-          <div className="p-12 bg-slate-900/50 border border-white/10 rounded-[4rem] flex flex-col justify-between text-center relative overflow-hidden shadow-2xl backdrop-blur-xl">
-               <span className="text-[12px] font-black text-slate-500 tracking-[0.6em] uppercase">PORTFOLIO HEALTH</span>
-               <div className="py-12">
-                   <div className="text-emerald-400 font-black text-[10rem] tracking-tighter leading-none drop-shadow-xl">98<span className="text-4xl ml-1">.4%</span></div>
-                   <div className="flex justify-center gap-3 mt-8 text-emerald-500 font-black text-sm tracking-[0.3em] uppercase bg-emerald-500/10 py-3 px-6 rounded-full w-fit mx-auto border border-emerald-500/20">
-                       <TrendingUp className="w-5 h-5" /> +1.2% VS PREV
-                   </div>
+          {/* HEALTH INDICATOR */}
+          <div className="p-10 bg-slate-900/40 border border-white/5 rounded-[4rem] flex flex-col justify-between items-center text-center relative overflow-hidden shadow-2xl backdrop-blur-xl">
+               <div className="absolute inset-0 bg-gradient-to-b from-primary-500/5 to-transparent"></div>
+               <span className="text-[10px] font-black text-slate-500 tracking-[0.5em] uppercase relative z-10">UNIT READINESS</span>
+               <div className="relative py-10">
+                   <div className="text-emerald-400 font-black text-9xl tracking-tighter leading-none relative z-10">98<span className="text-3xl">%</span></div>
+                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-emerald-500/10 blur-[50px] rounded-full animate-pulse"></div>
                </div>
-               <div className="space-y-8">
-                   <div className="h-6 bg-slate-950 rounded-full overflow-hidden border border-white/10 p-1.5 shadow-2xl">
-                       <div className="h-full bg-gradient-to-r from-primary-600 via-indigo-400 to-emerald-400 rounded-full w-[98.4%] shadow-lg"></div>
+               <div className="w-full space-y-4 relative z-10">
+                   <div className="h-4 bg-black/50 rounded-full overflow-hidden p-1 border border-white/5">
+                       <div className="h-full bg-emerald-500 rounded-full w-[98%] shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
                    </div>
-                   <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em]">Readiness Status</p>
+                   <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Operational Capacity Optimized</p>
                </div>
           </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <KPICard title="Revenue Annuale" value={`€ ${stats.totalRevenue.toLocaleString('it-IT')}`} icon={Euro} color="emerald" />
-          <KPICard title="Asset Attivi" value={stats.activeCount} icon={Briefcase} color="primary" />
-          <KPICard title="Alert Critici" value={stats.criticalDeadlines} icon={AlertTriangle} color="rose" alert={stats.criticalDeadlines > 0} />
+      {/* KPI SECTION */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <KPICard title="Revenue" value={`€ ${stats.totalRevenue.toLocaleString('it-IT')}`} icon={Euro} color="emerald" />
+          <KPICard title="Portfolio" value={stats.activeCount} icon={Briefcase} color="primary" />
+          <KPICard title="Threats" value={stats.criticalDeadlines} icon={AlertTriangle} color="rose" alert={stats.criticalDeadlines > 0} />
       </div>
 
+      {/* CHARTS AND RADAR */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          <div className="xl:col-span-2 p-12 bg-slate-900/50 border border-white/5 rounded-[4rem] shadow-3xl overflow-hidden relative backdrop-blur-xl">
-              <h3 className="font-black text-white text-3xl mb-14 flex items-center gap-6 uppercase tracking-tighter italic">
-                  <TrendingUp className="w-10 h-10 text-primary-500"/> Activity Forecast
+          <div className="xl:col-span-2 p-10 bg-slate-900/40 border border-white/5 rounded-[4rem] shadow-3xl backdrop-blur-xl">
+              <h3 className="font-black text-white text-2xl mb-10 flex items-center gap-4 uppercase tracking-tighter italic">
+                  <Activity className="w-8 h-8 text-primary-500"/> Volume Projection
               </h3>
-              <div className="h-[28rem] w-full relative z-10">
+              <div className="h-[24rem] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={workloadData}>
                           <defs>
                               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.7}/>
+                                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
                                   <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                               </linearGradient>
                           </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff03" vertical={false} />
-                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 12, fontWeight: '900'}} dy={20} />
-                          <YAxis axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 12, fontWeight: '900'}} allowDecimals={false} dx={-15} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 10, fontWeight: '900'}} dy={15} />
+                          <YAxis axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 10, fontWeight: '900'}} dx={-10} />
                           <Tooltip 
-                            contentStyle={{backgroundColor: '#020617', borderRadius: '32px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 30px 60px rgba(0,0,0,0.6)'}}
-                            itemStyle={{color: '#818cf8', fontWeight: '900'}}
+                            contentStyle={{backgroundColor: '#020617', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff'}}
                           />
-                          <Area type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={10} fillOpacity={1} fill="url(#colorValue)" />
+                          <Area type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={4} fillOpacity={1} fill="url(#colorValue)" />
                       </AreaChart>
                   </ResponsiveContainer>
               </div>
           </div>
           
-          <div className="bg-slate-900 border border-white/5 rounded-[4rem] p-12 flex flex-col h-full shadow-3xl relative overflow-hidden backdrop-blur-xl">
-              <h3 className="font-black text-white text-3xl mb-12 flex items-center gap-6 uppercase tracking-tighter italic">
-                  <Clock className="w-10 h-10 text-rose-500 animate-pulse-fast"/> Radar Scadenze
+          <div className="bg-slate-900/60 border border-white/5 rounded-[4rem] p-10 shadow-3xl backdrop-blur-xl">
+              <h3 className="font-black text-white text-2xl mb-10 flex items-center gap-4 uppercase tracking-tighter italic">
+                  <Target className="w-8 h-8 text-rose-500"/> Radar Scan
               </h3>
-              <div className="space-y-6 flex-1 overflow-y-auto pr-2 scrollbar-hide">
-                  {deadlines.length > 0 ? (
-                      deadlines.slice(0, 8).map(d => (
-                          <div key={d.id} className="p-7 bg-white/5 border border-white/5 rounded-[2.5rem] flex items-center justify-between hover:bg-white/10 transition-all duration-500 group">
-                              <div className="flex-1 min-w-0 mr-6">
-                                  <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">{new Date(d.date).toLocaleDateString('it-IT')}</p>
-                                  <p className="text-xl font-black text-white truncate group-hover:text-primary-400 transition-colors uppercase tracking-tight">{d.type}</p>
-                              </div>
-                              <div className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-tighter shadow-2xl border ${d.urgency === 'critical' ? 'bg-rose-600 text-white border-rose-400' : 'bg-primary-500/10 text-primary-400 border-primary-500/20'}`}>
-                                  {d.urgency}
-                              </div>
+              <div className="space-y-4 overflow-y-auto max-h-[20rem] scrollbar-hide">
+                  {deadlines.slice(0, 6).map(d => (
+                      <div key={d.id} className="p-5 bg-white/5 border border-white/5 rounded-3xl flex items-center justify-between group hover:bg-white/10 transition-all">
+                          <div>
+                              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">{d.date}</p>
+                              <p className="text-sm font-black text-white truncate uppercase">{d.type}</p>
                           </div>
-                      ))
-                  ) : (
-                      <div className="flex flex-col items-center justify-center h-full space-y-6 opacity-20 py-24">
-                          <ShieldAlert className="w-20 h-20 text-slate-500" />
-                          <p className="text-slate-500 text-sm font-black italic uppercase tracking-[0.5em]">Radar Clear</p>
+                          <div className={`w-3 h-3 rounded-full ${d.urgency === 'critical' ? 'bg-rose-500 animate-ping' : 'bg-primary-500'}`}></div>
                       </div>
-                  )}
+                  ))}
               </div>
           </div>
       </div>
@@ -230,16 +223,22 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
   );
 };
 
+const TelemetryUnit = ({ label, value, color }: any) => (
+    <div className="p-4 bg-black/40 border border-white/5 rounded-2xl flex flex-col items-center justify-center text-center">
+        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">{label}</span>
+        <span className={`text-lg font-black tracking-tighter text-${color}-400`}>{value}</span>
+    </div>
+);
+
 const KPICard = ({ title, value, icon: Icon, color, alert }: any) => (
-    <div className={`p-12 bg-slate-900 border rounded-[4rem] transition-all duration-700 hover:scale-[1.05] group relative overflow-hidden ${alert ? 'border-rose-500/50 bg-rose-950/10' : 'border-white/5 hover:border-primary-500/40'}`}>
-        {alert && <div className="absolute inset-0 bg-rose-500/5 animate-pulse"></div>}
-        <div className="flex justify-between items-start mb-10 relative z-10">
-            <span className="text-[12px] font-black text-slate-500 uppercase tracking-[0.4em] group-hover:text-slate-200 transition-colors">{title}</span>
-            <div className={`p-5 rounded-3xl transition-all duration-700 ${alert ? 'bg-rose-500 text-white shadow-lg' : `bg-${color}-500/10 text-${color}-400 group-hover:scale-125 shadow-inner border border-${color}-500/20`}`}>
-                <Icon className="w-8 h-8" />
+    <div className={`p-10 bg-slate-900 border rounded-[3rem] transition-all hover:scale-[1.02] group relative overflow-hidden ${alert ? 'border-rose-500/40 bg-rose-950/10' : 'border-white/5 hover:border-primary-500/30'}`}>
+        <div className="flex justify-between items-start mb-8 relative z-10">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{title}</span>
+            <div className={`p-4 rounded-2xl ${alert ? 'bg-rose-500 text-white' : `bg-${color}-500/10 text-${color}-400`}`}>
+                <Icon className="w-6 h-6" />
             </div>
         </div>
-        <p className={`text-6xl font-black tracking-tighter transition-all relative z-10 ${alert ? 'text-rose-400' : 'text-white group-hover:text-primary-400'}`}>{value}</p>
+        <p className="text-5xl font-black text-white tracking-tighter relative z-10">{value}</p>
     </div>
 );
 
