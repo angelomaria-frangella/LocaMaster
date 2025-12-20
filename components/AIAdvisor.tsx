@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Loader2, X } from 'lucide-react';
 import { analyzeLeaseStrategy } from '../services/geminiService';
@@ -120,7 +121,7 @@ const AIAdvisor: React.FC<AIAdvisorProps> = ({ contracts, focusedContract, onCle
                 {focusedContract.propertyAddress} • {focusedContract.tenantName}
               </p>
             ) : (
-              <p className="text-xs text-slate-400">Powered by Gemini 2.5 Flash</p>
+              <p className="text-xs text-slate-400">Powered by Gemini 3 Pro</p>
             )}
           </div>
         </div>

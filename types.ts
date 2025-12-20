@@ -1,5 +1,4 @@
 
-
 export enum ContractType {
   ABITATIVO_LIBERO_4_4 = 'Abitativo Libero (4+4)',
   ABITATIVO_CONCORDATO_3_2 = 'Abitativo Concordato (3+2)',
@@ -47,9 +46,8 @@ export interface RegistrationData {
   office?: string;
   series?: string;
   number?: string;
-  // NUOVI CAMPI
-  taxPaid?: number; // Imposta registro versata
-  stampDutyPaid?: number; // Bollo versato
+  taxPaid?: number; 
+  stampDutyPaid?: number; 
 }
 
 export interface Party {
@@ -100,12 +98,13 @@ export interface Contract {
   startDate: string; 
   firstExpirationDate?: string; 
   secondExpirationDate?: string; 
-  earlyTerminationDate?: string; // NUOVO: Data chiusura anticipata/disdetta
+  earlyTerminationDate?: string; 
   noticeMonthsOwner?: number; 
   noticeMonthsTenant?: number; 
 
   // 5. Registrazione e Fisco
   cedolareSecca: boolean;
+  isCanoneConcordato: boolean; 
   registration?: RegistrationData;
   
   // 6. Altro
