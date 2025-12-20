@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%233b82f6'/><path d='M30 30h40v40H30z' fill='white'/></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>TITAN Premium Dashboard</title>
+    <title>TITAN - Centro di Comando Locazioni</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -16,6 +16,7 @@
             colors: {
               slate: { 850: '#0f172a', 900: '#020617', 950: '#000000' },
               primary: { 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb' },
+              hazard: { 500: '#f43f5e', 600: '#e11d48' }
             },
             fontFamily: { 
               sans: ['Inter', 'sans-serif'],
@@ -27,31 +28,56 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-      body { background-color: #020617; color: #f8fafc; margin: 0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-      .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+      body { background-color: #020617; color: #f8fafc; margin: 0; font-family: 'Inter', sans-serif; overflow: hidden; }
       .cockpit-grid {
         background-size: 40px 40px;
-        background-image: radial-gradient(circle, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+        background-image: 
+          linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
         position: fixed; inset: 0; z-index: -1;
       }
-      ::-webkit-scrollbar { width: 6px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-      ::-webkit-scrollbar-thumb:hover { background: #334155; }
-      
-      /* Animazione d'ingresso */
-      @keyframes slideUp {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+      .hud-border { 
+        position: relative;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        box-shadow: inset 0 0 30px rgba(59, 130, 246, 0.05);
+        background: rgba(2, 6, 23, 0.7);
+        backdrop-filter: blur(12px);
       }
-      .animate-cockpit { animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+      .hud-border::before {
+        content: ''; position: absolute; top: -1px; left: -1px; width: 25px; height: 25px;
+        border-top: 3px solid #3b82f6; border-left: 3px solid #3b82f6;
+      }
+      .hud-border::after {
+        content: ''; position: absolute; bottom: -1px; right: -1px; width: 25px; height: 25px;
+        border-bottom: 3px solid #3b82f6; border-right: 3px solid #3b82f6;
+      }
+      .glow-text { text-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+      .animate-scan {
+        position: relative; overflow: hidden;
+      }
+      .animate-scan::after {
+        content: ''; position: absolute; top: -100%; left: 0; width: 100%; height: 4px;
+        background: linear-gradient(to right, transparent, #3b82f6, transparent);
+        animation: scan 3s linear infinite;
+        box-shadow: 0 0 20px #3b82f6;
+      }
+      @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
+      @keyframes pulse-hazard { 
+        0%, 100% { border-color: #f43f5e; box-shadow: 0 0 20px rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.1); } 
+        50% { border-color: transparent; box-shadow: none; background: transparent; } 
+      }
+      .hazard-alert { animation: pulse-hazard 1.5s infinite; border: 2px solid #f43f5e; }
+      ::-webkit-scrollbar { width: 5px; }
+      ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+      .perspective-hud { perspective: 1000px; }
+      .rotate-hud { transform: rotateX(2deg); }
     </style>
-  <script type="importmap">
+    <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^18.3.1",
+    "react-dom/": "https://esm.sh/react-dom@^18.3.1/",
+    "react/": "https://esm.sh/react@^18.3.1/",
     "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.89.0",
@@ -60,7 +86,7 @@
   }
 }
 </script>
-</head>
+  </head>
   <body>
     <div class="cockpit-grid"></div>
     <div id="root"></div>

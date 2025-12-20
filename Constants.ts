@@ -9,7 +9,9 @@ export const MOCK_CONTRACTS: Contract[] = [
   {
     id: '1',
     ownerName: 'Giuseppe Verdi',
+    owners: [{ id: '1', name: 'Giuseppe Verdi' }],
     tenantName: 'Mario Rossi',
+    tenants: [{ id: '2', name: 'Mario Rossi' }],
     clientSide: 'LOCATORE',
     propertyAddress: 'Via Roma 10, Milano',
     contractType: ContractType.ABITATIVO_LIBERO_4_4,
@@ -18,11 +20,15 @@ export const MOCK_CONTRACTS: Contract[] = [
     deposit: 3000,
     isActive: true,
     cedolareSecca: true,
+    // FIX: Added missing required property
+    isCanoneConcordato: false,
   },
   {
     id: '2',
     ownerName: 'Immobiliare Navigli SRL',
+    owners: [{ id: '3', name: 'Immobiliare Navigli SRL' }],
     tenantName: 'Giulia Bianchi',
+    tenants: [{ id: '4', name: 'Giulia Bianchi' }],
     clientSide: 'LOCATORE',
     propertyAddress: 'Corso Italia 5, Firenze',
     contractType: ContractType.COMMERCIALE_6_6,
@@ -31,11 +37,15 @@ export const MOCK_CONTRACTS: Contract[] = [
     deposit: 6000,
     isActive: true,
     cedolareSecca: false,
+    // FIX: Added missing required property
+    isCanoneConcordato: false,
   },
   {
     id: '3',
     ownerName: 'Luigi Pirandello',
+    owners: [{ id: '5', name: 'Luigi Pirandello' }],
     tenantName: 'Luca Verdi',
+    tenants: [{ id: '6', name: 'Luca Verdi' }],
     clientSide: 'LOCATORE',
     propertyAddress: 'Piazza Navona 2, Roma',
     contractType: ContractType.ABITATIVO_CONCORDATO_3_2,
@@ -44,11 +54,15 @@ export const MOCK_CONTRACTS: Contract[] = [
     deposit: 2400,
     isActive: true,
     cedolareSecca: true,
+    // FIX: Added missing required property
+    isCanoneConcordato: true,
   },
   {
     id: '4',
     ownerName: 'Giuseppe Verdi',
+    owners: [{ id: '1', name: 'Giuseppe Verdi' }],
     tenantName: 'Sofia Neri',
+    tenants: [{ id: '7', name: 'Sofia Neri' }],
     clientSide: 'CONDUTTORE', 
     propertyAddress: 'Via Po 22, Torino',
     contractType: ContractType.TRANSITORIO,
@@ -57,11 +71,15 @@ export const MOCK_CONTRACTS: Contract[] = [
     deposit: 1400,
     isActive: true,
     cedolareSecca: true,
+    // FIX: Added missing required property
+    isCanoneConcordato: false,
   },
   {
     id: '5',
     ownerName: 'Investimenti Immobiliari SpA',
+    owners: [{ id: '8', name: 'Investimenti Immobiliari SpA' }],
     tenantName: 'Tech Solutions SRL',
+    tenants: [{ id: '9', name: 'Tech Solutions SRL' }],
     clientSide: 'LOCATORE',
     propertyAddress: 'Viale Europa 100, Roma',
     contractType: ContractType.COMMERCIALE_6_6,
@@ -70,6 +88,8 @@ export const MOCK_CONTRACTS: Contract[] = [
     deposit: 11250,
     isActive: true,
     cedolareSecca: false,
+    // FIX: Added missing required property
+    isCanoneConcordato: false,
   }
 ];
 

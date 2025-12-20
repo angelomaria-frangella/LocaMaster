@@ -9,20 +9,20 @@ interface SidebarProps {
 
 export default function Sidebar({ currentView, setCurrentView, onLogout }: SidebarProps) {
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'dashboard', label: 'Cruscotto', icon: LayoutDashboard },
     { id: 'contracts', label: 'Asset Contratti', icon: FileText },
     { id: 'calendar', label: 'Scadenzario', icon: Calendar },
     { id: 'properties', label: 'Patrimonio', icon: Building },
-    { id: 'ai-advisor', label: 'Strategia IA', icon: Bot },
+    { id: 'ai-advisor', label: 'Consulenza IA', icon: Bot },
   ];
 
   return (
-    <aside className="h-full w-24 lg:w-72 bg-slate-950 border-r border-white/5 flex flex-col shadow-2xl relative z-50">
+    <aside className="h-full w-24 lg:w-72 bg-black border-r border-white/5 flex flex-col shadow-2xl relative z-50">
       <div className="p-8">
         <div className="w-14 h-14 bg-primary-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-2xl shadow-primary-600/40 mb-10 mx-auto lg:mx-0 transition-all hover:rotate-6 hover:scale-110">T</div>
         <div className="hidden lg:block">
             <h1 className="font-black text-2xl tracking-tighter text-white uppercase italic">Titan<span className="text-primary-500">_</span></h1>
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] mt-1">Management Suite</p>
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] mt-1">HUB DI GESTIONE FISCALE</p>
         </div>
       </div>
 
