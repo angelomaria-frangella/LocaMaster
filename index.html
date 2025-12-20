@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="LocaMaster">
     <meta name="theme-color" content="#020617">
 
-    <title>LocaMaster AI - Command Center</title>
+    <title>LocaMaster AI - Titan Cockpit</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -29,15 +29,15 @@
             },
             animation: {
               'glow': 'glow 2s ease-in-out infinite alternate',
-              'scan': 'scan 8s linear infinite',
-              'pulse-fast': 'pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'spin-slow': 'spin 12s linear infinite',
+              'scan': 'scan 10s linear infinite',
+              'pulse-fast': 'pulse 0.4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'spin-slow': 'spin 15s linear infinite',
               'float': 'float 6s ease-in-out infinite',
             },
             keyframes: {
               glow: {
                 '0%': { boxShadow: '0 0 5px rgba(99, 102, 241, 0.2)' },
-                '100%': { boxShadow: '0 0 20px rgba(99, 102, 241, 0.6)' },
+                '100%': { boxShadow: '0 0 25px rgba(99, 102, 241, 0.5)' },
               },
               scan: {
                 '0%': { transform: 'translateY(-100%)' },
@@ -63,9 +63,9 @@
         cursor: crosshair;
       }
       .bg-grid {
-        background-size: 50px 50px;
-        background-image: linear-gradient(to right, rgba(99, 102, 241, 0.04) 1px, transparent 1px),
-                          linear-gradient(to bottom, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+        background-size: 60px 60px;
+        background-image: linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+                          linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
         position: fixed;
         inset: 0;
         z-index: -1;
@@ -75,25 +75,34 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 4px;
-        background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.05), transparent);
+        height: 100%;
+        background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.1) 51%, transparent 52%);
+        background-size: 100% 4px;
         z-index: 100;
         pointer-events: none;
-        animation: scan 3s linear infinite;
+        opacity: 0.3;
       }
-      .glass-morphism {
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+      .hud-line {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(to right, transparent, rgba(99, 102, 241, 0.2), transparent);
+        z-index: 101;
+        pointer-events: none;
+        animation: scan 4s linear infinite;
+      }
+      .glass-card {
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
       }
       ::-webkit-scrollbar { width: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: #312e81; border-radius: 10px; }
-      
-      .text-shadow-glow {
-        text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
-      }
+      ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 10px; }
     </style>
   <script type="importmap">
 {
@@ -114,6 +123,7 @@
   <body>
     <div class="bg-grid"></div>
     <div class="cyber-scanline"></div>
+    <div class="hud-line"></div>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

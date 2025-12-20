@@ -10,7 +10,7 @@ import AddContract from './components/AddContract';
 import Settings from './components/Settings';
 import { MOCK_CONTRACTS } from './appConstants';
 import { generateDeadlines, isCedolareActive } from './utils/dateUtils';
-import { Menu, Loader2 } from 'lucide-react';
+import { Menu, Loader2, Radio } from 'lucide-react';
 import { Contract } from './types';
 import { fetchContracts, createContract, isSupabaseConfigured, deleteContract, normalizeContract } from './services/supabaseService';
 
@@ -31,7 +31,7 @@ const App: React.FC = () => {
   const [selectedContractForAI, setSelectedContractForAI] = useState<Contract | null>(null);
 
   useEffect(() => {
-      console.log("%c LocaMaster AI V1.9.5 - COCKPIT ELITE ONLINE ", "background: #6366f1; color: white; font-weight: bold; border-radius: 4px; padding: 2px 10px;");
+      console.log("%c LocaMaster TITAN V2.0 - COCKPIT ACTIVATED ", "background: #6366f1; color: white; font-weight: bold; border-radius: 4px; padding: 4px 12px; font-size: 14px;");
       localStorage.setItem('locamaster_contracts', JSON.stringify(contracts));
   }, [contracts]);
 
@@ -45,11 +45,11 @@ const App: React.FC = () => {
               setContracts(dbContracts);
               setUsingRealDb(true);
           } else {
-              console.log("Database Cloud Vuoto - Protezione Locale Attiva");
+              console.log("Cloud Database Empty - Local Backup Active");
               setUsingRealDb(true);
           }
         } catch (error) {
-          console.error("Cloud Connection Error:", error);
+          console.error("Infrastructural error:", error);
         } finally {
           setIsLoading(false);
         }
@@ -106,21 +106,21 @@ const App: React.FC = () => {
             setCurrentView('contracts');
         }
     } catch (e: any) {
-        alert(`Errore Salvataggio: ${e.message}`);
+        alert(`Storage Error: ${e.message}`);
     } finally {
         setIsLoading(false);
     }
   }, [usingRealDb]);
 
   const handleDeleteContract = async (id: string) => {
-    if (window.confirm("Confermi eliminazione definitiva?")) {
+    if (window.confirm("Confermi smantellamento asset definitivo?")) {
         if(usingRealDb) await deleteContract(id);
         setContracts(prev => prev.filter(c => c.id !== id));
     }
   };
 
   const handleLogout = () => {
-      if (confirm("Uscire dal sistema?")) {
+      if (confirm("Terminare sessione di comando sicura?")) {
           localStorage.removeItem('locamaster_contracts');
           window.location.reload();
       }
@@ -128,20 +128,23 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full bg-[#020617] text-slate-100 font-sans overflow-hidden">
-        {isSidebarOpen && <div className="fixed inset-0 bg-black/80 z-40 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
-        <div className={`fixed lg:relative inset-y-0 left-0 z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-500 ease-in-out h-full`}>
+        {isSidebarOpen && <div className="fixed inset-0 bg-black/90 z-40 lg:hidden backdrop-blur-md" onClick={() => setIsSidebarOpen(false)} />}
+        <div className={`fixed lg:relative inset-y-0 left-0 z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-700 ease-in-out h-full`}>
           <Sidebar currentView={currentView} setCurrentView={handleNavigation} onLogout={handleLogout} />
         </div>
         <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-          <div className="lg:hidden flex items-center p-6 border-b border-white/5 bg-slate-950 z-30 justify-between">
-            <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-primary-500"><Menu className="w-8 h-8" /></button>
-            <span className="font-black text-xl tracking-tighter uppercase italic">LocaMaster <span className="text-primary-500">AI</span></span>
+          <div className="lg:hidden flex items-center p-8 border-b border-white/10 bg-slate-950 z-30 justify-between">
+            <button onClick={() => setIsSidebarOpen(true)} className="p-3 text-primary-500 bg-primary-500/10 rounded-2xl"><Menu className="w-10 h-10" /></button>
+            <span className="font-black text-3xl tracking-tighter uppercase italic">TITAN <span className="text-primary-500">OS</span></span>
           </div>
-          <div className="flex-1 overflow-y-auto p-6 md:p-12 pb-40 scroll-smooth">
+          <div className="flex-1 overflow-y-auto p-6 md:p-16 pb-48 scroll-smooth">
               {isLoading ? (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400 font-black animate-pulse">
-                  <Loader2 className="w-16 h-16 animate-spin text-primary-500 mb-8" />
-                  <span className="text-2xl tracking-[0.3em] uppercase italic">Sincronizzazione Command Center...</span>
+                <div className="flex flex-col items-center justify-center h-full text-slate-500 font-black">
+                  <div className="relative mb-12">
+                      <Loader2 className="w-24 h-24 animate-spin text-primary-600" />
+                      <Radio className="absolute inset-0 m-auto w-10 h-10 text-primary-400 animate-pulse" />
+                  </div>
+                  <span className="text-3xl tracking-[0.5em] uppercase italic animate-pulse">Initializing Titan Command Center...</span>
                 </div>
               ) : isAddingContract ? (
                 <AddContract initialData={editingContract} onConfirmSave={handleSaveContract} onCancel={() => setIsAddingContract(false)} />
