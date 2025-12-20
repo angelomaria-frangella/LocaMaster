@@ -6,8 +6,8 @@ const MODEL_FLASH = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 
 /**
- * Estrae i dati con focus ossessivo su Destinazione d'Uso e Canone Concordato.
- * Localizzazione 100% Italiana.
+ * DEEP SCAN: Estrae ogni singolo metadato fiscale, catastale e anagrafico.
+ * Implementa logica di allerta per dati mancanti.
  */
 export const extractContractData = async (base64Data: string, mimeType: string): Promise<any> => {
     try {
@@ -15,14 +15,15 @@ export const extractContractData = async (base64Data: string, mimeType: string):
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
             config: {
-                systemInstruction: `Agisci come un Analista Legale esperto in locazioni italiane. 
-                Estrai i dati e restituisci SOLO un JSON conforme allo schema.
+                systemInstruction: `Agisci come un Analista Legale e Fiscale Senior. 
+                Estrai ogni dato e restituisci SOLO un JSON conforme allo schema.
                 
-                REGOLE TASSATIVE PER L'ESTRAZIONE:
-                1. DESTINAZIONE D'USO (usageType): Cerca clausole come "uso abitativo", "uso ufficio", "categoria catastale". 
-                   Se NON trovi l'uso esplicitamente, scrivi esattamente: "CARENZA DOCUMENTALE: Destinazione d'uso non rilevata".
-                2. CANONE CONCORDATO (isCanoneConcordato): Imposta a true se cita "Accordo Territoriale" o "Legge 431/98 art 2 c.3".
-                3. LINGUA: Rispondi esclusivamente in ITALIANO tecnico.`,
+                REGOLE TASSATIVE:
+                1. USAGE (usageType): Fondamentale. Se assente scrivi "CARENZA DOCUMENTALE".
+                2. FISCALE: Cerca estremi registrazione (Serie, Numero, Ufficio).
+                3. CATASTALE: Estrai Foglio, Particella, Subalterno.
+                4. PARTI: Identifica tutti i locatori e conduttori con i loro Codici Fiscali.
+                5. LINGUA: Solo ITALIANO tecnico professionale.`,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
@@ -32,17 +33,24 @@ export const extractContractData = async (base64Data: string, mimeType: string):
                         propertyAddress: { type: Type.STRING },
                         usageType: { type: Type.STRING },
                         annualRent: { type: Type.NUMBER },
+                        deposit: { type: Type.NUMBER },
                         isCanoneConcordato: { type: Type.BOOLEAN },
+                        cedolareSecca: { type: Type.BOOLEAN },
                         startDate: { type: Type.STRING },
+                        stipulationDate: { type: Type.STRING },
                         cadastral: {
                             type: Type.OBJECT,
-                            properties: { foglio: { type: Type.STRING }, particella: { type: Type.STRING }, subalterno: { type: Type.STRING } }
+                            properties: { foglio: { type: Type.STRING }, particella: { type: Type.STRING }, subalterno: { type: Type.STRING }, categoria: { type: Type.STRING }, rendita: { type: Type.NUMBER } }
+                        },
+                        registration: {
+                            type: Type.OBJECT,
+                            properties: { date: { type: Type.STRING }, office: { type: Type.STRING }, series: { type: Type.STRING }, number: { type: Type.STRING } }
                         }
                     },
-                    required: ["usageType", "annualRent", "isCanoneConcordato"]
+                    required: ["usageType", "annualRent", "owners", "tenants"]
                 }
             },
-            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Analizza il contratto e rileva l'uso dell'immobile." }] }]
+            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Esegui deep scan forense di questo contratto di locazione." }] }]
         });
         return JSON.parse(response.text || "{}");
     } catch (e) {
@@ -52,26 +60,29 @@ export const extractContractData = async (base64Data: string, mimeType: string):
 };
 
 /**
- * Intelligence Strategica Portfolio: Filtra suggerimenti inutili.
+ * INTELLIGENCE PORTFOLIO: Rileva rischi di nullità e ottimizzazioni fiscali.
  */
 export const generatePortfolioInsights = async (contracts: Contract[]): Promise<{category: string, text: string}[]> => {
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         
         const data = contracts.map(c => ({
+            id: c.id,
             addr: c.propertyAddress,
             uso: c.usageType,
             rent: c.annualRent,
-            concordato: c.isCanoneConcordato
+            concordato: c.isCanoneConcordato,
+            cedolare: c.cedolareSecca,
+            catastale: c.cadastral
         }));
 
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
-            contents: `Analizza questo portfolio. Fornisci 3 intuizioni in ITALIANO.
-            REGOLE:
-            1. Se usageType contiene 'CARENZA', segnala il rischio di nullità.
-            2. Se concordato = true, non suggerirlo di nuovo.
-            3. Suggerisci ottimizzazioni fiscali solo se necessarie.`,
+            contents: `Analizza questo portfolio asset. Fornisci 3 intuizioni critiche in ITALIANO.
+            FOCUS: 
+            - Segnala Rischio di Nullità se manca l'uso o i dati catastali.
+            - Segnala Mancata Ottimizzazione se c'è canone concordato ma non cedolare al 10%.
+            - Segnala Rendimento basso rispetto alla media di mercato se possibile.`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -99,13 +110,13 @@ export const analyzeLeaseStrategy = async (userMsg: string, contracts: Contract[
         model: MODEL_PRO,
         contents: [...history.map(m => ({role: m.role === 'ai' ? 'model' : 'user', parts: [{text: m.content}]})), {role: 'user', parts: [{text: userMsg}]}],
         config: { 
-            systemInstruction: `Sei un consulente legale senior esperto in locazioni. Rispondi sempre in ITALIANO. 
-            Se l'uso dell'immobile è marcato come 'CARENZA' nel contratto selezionato, avvisa l'utente della nullità potenziale.` 
+            systemInstruction: `Sei TITAN Intelligence, consulente legale senior. Rispondi in ITALIANO. 
+            Analizza i dati catastali e fiscali forniti. Se rilevi omissioni nei campi 'registrazione' o 'cadastral', inizia la risposta con un avviso di 'INTEGRITÀ ASSET COMPROMESSA'.` 
         }
     });
     return response.text || "";
 };
 
 export const generateFiscalReport = async (contracts: Contract[], type: string, subjectName: string, studioSettings: any) => {
-    return `<h1>Report Fiscale Generato</h1><p>Dati in elaborazione per ${subjectName}.</p>`;
+    return `<h1>Report Fiscale TITAN</h1><p>Analisi asset per ${subjectName}.</p>`;
 };
