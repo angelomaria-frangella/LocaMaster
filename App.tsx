@@ -10,7 +10,7 @@ import AddContract from './components/AddContract';
 import Settings from './components/Settings';
 import { MOCK_CONTRACTS } from './appConstants';
 import { generateDeadlines, isCedolareActive } from './utils/dateUtils';
-import { Menu, Loader2 } from 'lucide-react';
+import { Menu, Loader2, Zap } from 'lucide-react';
 import { Contract } from './types';
 import { fetchContracts, createContract, isSupabaseConfigured, deleteContract, normalizeContract } from './services/supabaseService';
 
@@ -30,7 +30,7 @@ const App: React.FC = () => {
   const [selectedContractForAI, setSelectedContractForAI] = useState<Contract | null>(null);
 
   useEffect(() => {
-      console.log("%c [SYSTEM] TITAN COCKPIT V2.1.0 ACTIVATED ", "background: #6366f1; color: white; font-weight: bold; padding: 5px;");
+      console.log("%c [PROTOCOL] TITAN ULTRA V2.2.0 ACTIVATED ", "background: #a855f7; color: white; font-weight: bold; padding: 6px 12px; border-radius: 4px;");
       localStorage.setItem('locamaster_contracts', JSON.stringify(contracts));
   }, [contracts]);
 
@@ -45,7 +45,7 @@ const App: React.FC = () => {
               setUsingRealDb(true);
           }
         } catch (error) {
-          console.error("Cloud Error:", error);
+          console.error("Quantum Link Error:", error);
         } finally {
           setIsLoading(false);
         }
@@ -83,7 +83,7 @@ const App: React.FC = () => {
   }, [usingRealDb]);
 
   const handleLogout = () => {
-      if (confirm("Shutdown Mission Control?")) {
+      if (confirm("Shutdown Quantum Engine?")) {
           localStorage.removeItem('locamaster_contracts');
           window.location.reload();
       }
@@ -91,26 +91,29 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full bg-[#020617] text-slate-100 font-sans overflow-hidden">
-        <div className={`fixed lg:relative inset-y-0 left-0 z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-500 ease-in-out h-full`}>
+        <div className={`fixed lg:relative inset-y-0 left-0 z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-700 ease-in-out h-full`}>
           <Sidebar currentView={currentView} setCurrentView={handleNavigation} onLogout={handleLogout} />
         </div>
         <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-          <div className="lg:hidden flex items-center p-6 border-b border-white/5 bg-slate-950 z-30 justify-between">
-            <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-primary-500"><Menu className="w-10 h-10" /></button>
-            <span className="font-black text-2xl tracking-tighter uppercase italic text-white">TITAN <span className="text-primary-500">OS</span></span>
+          <div className="lg:hidden flex items-center p-8 border-b border-white/5 bg-black z-30 justify-between">
+            <button onClick={() => setIsSidebarOpen(true)} className="p-3 text-primary-500 bg-primary-500/10 rounded-2xl"><Menu className="w-10 h-10" /></button>
+            <span className="font-black text-3xl tracking-tighter uppercase italic text-white">TITAN <span className="text-primary-500">_</span></span>
           </div>
-          <div className="flex-1 overflow-y-auto p-6 md:p-12 pb-40">
+          <div className="flex-1 overflow-y-auto p-10 md:p-20 pb-48">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-full">
-                  <Loader2 className="w-16 h-16 animate-spin text-primary-500 mb-6" />
-                  <span className="text-2xl font-black uppercase tracking-widest italic animate-pulse">Syncing Titan Cockpit...</span>
+                  <div className="relative mb-12">
+                      <Loader2 className="w-24 h-24 animate-spin text-primary-600" />
+                      <Zap className="absolute inset-0 m-auto w-10 h-10 text-primary-400 animate-pulse" />
+                  </div>
+                  <span className="text-4xl font-black uppercase tracking-[0.5em] italic animate-pulse">Booting Titan Ultra...</span>
                 </div>
               ) : isAddingContract ? (
                 <AddContract initialData={editingContract} onConfirmSave={handleSaveContract} onCancel={() => setIsAddingContract(false)} />
               ) : (
                 <>
                   {currentView === 'dashboard' && <Dashboard contracts={contracts} deadlines={deadlines} onAddContract={() => setIsAddingContract(true)} aiEnabled={true} />}
-                  {currentView === 'contracts' && <ContractList contracts={contracts} onAddContract={() => setIsAddingContract(true)} onOpenAI={c => { setSelectedContractForAI(c); setCurrentView('ai-advisor'); }} onEditContract={(c) => { setEditingContract(c); setIsAddingContract(true); }} onDeleteContract={async id => { if(confirm("Confirm deletion?")) { if(usingRealDb) await deleteContract(id); setContracts(prev => prev.filter(c => c.id !== id)); } }} />}
+                  {currentView === 'contracts' && <ContractList contracts={contracts} onAddContract={() => setIsAddingContract(true)} onOpenAI={c => { setSelectedContractForAI(c); setCurrentView('ai-advisor'); }} onEditContract={(c) => { setEditingContract(c); setIsAddingContract(true); }} onDeleteContract={async id => { if(confirm("Terminate asset?")) { if(usingRealDb) await deleteContract(id); setContracts(prev => prev.filter(c => c.id !== id)); } }} />}
                   {currentView === 'properties' && <PropertyList contracts={contracts} />}
                   {currentView === 'ai-advisor' && <AIAdvisor contracts={contracts} focusedContract={selectedContractForAI} onClearFocus={() => setSelectedContractForAI(null)} />}
                   {currentView === 'calendar' && <CalendarView deadlines={deadlines} />}
