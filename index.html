@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="LocaMaster">
     <meta name="theme-color" content="#020617">
 
-    <title>LocaMaster AI - Executive Command</title>
+    <title>LocaMaster AI - Command Center</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -23,12 +23,16 @@
               slate: { 850: '#151f32', 900: '#0f172a', 950: '#020617' },
               primary: { 400: '#818cf8', 500: '#6366f1', 600: '#4f46e5' },
             },
-            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            fontFamily: { 
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace']
+            },
             animation: {
               'glow': 'glow 2s ease-in-out infinite alternate',
               'scan': 'scan 8s linear infinite',
               'pulse-fast': 'pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'spin-slow': 'spin 10s linear infinite',
+              'spin-slow': 'spin 12s linear infinite',
+              'float': 'float 6s ease-in-out infinite',
             },
             keyframes: {
               glow: {
@@ -38,6 +42,10 @@
               scan: {
                 '0%': { transform: 'translateY(-100%)' },
                 '100%': { transform: 'translateY(100%)' }
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' }
               }
             }
           },
@@ -52,11 +60,12 @@
         background-color: #020617;
         color: #f8fafc;
         overflow-x: hidden;
+        cursor: crosshair;
       }
       .bg-grid {
-        background-size: 60px 60px;
-        background-image: linear-gradient(to right, rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-                          linear-gradient(to bottom, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        background-image: linear-gradient(to right, rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+                          linear-gradient(to bottom, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
         position: fixed;
         inset: 0;
         z-index: -1;
@@ -66,15 +75,25 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 2px;
-        background: linear-gradient(to right, transparent, rgba(99, 102, 241, 0.1), transparent);
+        height: 4px;
+        background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.05), transparent);
         z-index: 100;
         pointer-events: none;
-        animation: scan 4s linear infinite;
+        animation: scan 3s linear infinite;
+      }
+      .glass-morphism {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
       }
       ::-webkit-scrollbar { width: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #312e81; border-radius: 10px; }
+      
+      .text-shadow-glow {
+        text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+      }
     </style>
   <script type="importmap">
 {
