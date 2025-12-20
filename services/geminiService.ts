@@ -77,13 +77,48 @@ export const extractContractData = async (base64Data: string, mimeType: string):
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
             config: {
-                systemInstruction: "Estrai: ownerName, tenantName, propertyAddress, annualRent (number), startDate (YYYY-MM-DD), cedolareSecca (boolean). Rispondi solo in JSON.",
-                responseMimeType: "application/json"
+                systemInstruction: "Analizza il contratto di locazione fornito. IDENTIFICA TUTTI I SOGGETTI (Locatori e Conduttori). Per ogni soggetto estrai: Nome/Ragione Sociale, Codice Fiscale/P.IVA, Indirizzo Residenza/Sede Legale. Estrai inoltre: Indirizzo immobile, Canone Annuo, Data Decorrenza (YYYY-MM-DD), Regime Fiscale (Cedolare Secca: true/false). Restituisci esclusivamente un oggetto JSON.",
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        owners: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    name: { type: Type.STRING },
+                                    taxCode: { type: Type.STRING },
+                                    address: { type: Type.STRING }
+                                },
+                                required: ["name"]
+                            }
+                        },
+                        tenants: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    name: { type: Type.STRING },
+                                    taxCode: { type: Type.STRING },
+                                    address: { type: Type.STRING }
+                                },
+                                required: ["name"]
+                            }
+                        },
+                        propertyAddress: { type: Type.STRING },
+                        annualRent: { type: Type.NUMBER },
+                        startDate: { type: Type.STRING },
+                        cedolareSecca: { type: Type.BOOLEAN }
+                    },
+                    required: ["owners", "tenants", "propertyAddress", "annualRent", "startDate"]
+                }
             },
-            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Estrai dati." }] }]
+            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Estrai l'anagrafica completa dei soggetti e i parametri tecnici del contratto." }] }]
         });
         return JSON.parse(response.text || "{}");
     } catch (e) {
+        console.error("Data extraction error:", e);
         return {};
     }
 };
@@ -92,7 +127,6 @@ export const generateFiscalReport = async (contracts: Contract[], reportType: st
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         
-        // Uso della variabile studioSettings per risolvere il warning e migliorare il prompt
         const studioInfo = studioSettings?.name 
             ? `Studio Professionale: ${studioSettings.name}, P.IVA: ${studioSettings.piva}, Località: ${studioSettings.city}` 
             : "Documento emesso da LocaMaster AI Intelligence System";

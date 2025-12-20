@@ -3,9 +3,9 @@
 <html lang="it" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23a855f7'/><path d='M30 30h40v40H30z' fill='white'/></svg>" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%233b82f6'/><path d='M30 30h40v40H30z' fill='white'/></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>TITAN ULTRA V2.2.0</title>
+    <title>TITAN Premium Dashboard</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -15,67 +15,54 @@
           extend: {
             colors: {
               slate: { 850: '#0f172a', 900: '#020617', 950: '#000000' },
-              primary: { 400: '#c084fc', 500: '#a855f7', 600: '#9333ea' },
+              primary: { 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb' },
             },
             fontFamily: { 
-              sans: ['Inter', 'sans-serif'], 
-              mono: ['JetBrains Mono', 'monospace'] 
-            },
-            animation: {
-              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'radar': 'radar 2s linear infinite',
-            },
-            keyframes: {
-              radar: {
-                '0%': { transform: 'rotate(0deg)' },
-                '100%': { transform: 'rotate(360deg)' }
-              }
+              sans: ['Inter', 'sans-serif'],
+              display: ['Lexend', 'sans-serif']
             }
           },
         },
       };
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-      body { background-color: #020617; color: #f8fafc; overflow-x: hidden; }
-      .bg-grid {
+      body { background-color: #020617; color: #f8fafc; margin: 0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+      .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+      .cockpit-grid {
         background-size: 40px 40px;
-        background-image: linear-gradient(to right, rgba(168, 85, 247, 0.05) 1px, transparent 1px),
-                          linear-gradient(to bottom, rgba(168, 85, 247, 0.05) 1px, transparent 1px);
+        background-image: radial-gradient(circle, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
         position: fixed; inset: 0; z-index: -1;
       }
-      .cyber-glow {
-        position: fixed; top: 0; left: 0; width: 100%; height: 2px;
-        background: linear-gradient(to right, transparent, #a855f7, transparent);
-        z-index: 1000; pointer-events: none;
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: #334155; }
+      
+      /* Animazione d'ingresso */
+      @keyframes slideUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
       }
-      /* Hard-coded badge to verify deployment */
-      #v-badge {
-        position: fixed; bottom: 10px; right: 10px; 
-        background: #a855f7; color: white; padding: 4px 10px;
-        font-family: monospace; font-size: 10px; font-weight: bold;
-        z-index: 9999; border-radius: 4px; pointer-events: none;
-      }
+      .animate-cockpit { animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
-    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
-    "vite": "https://esm.sh/vite@^7.3.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.89.0"
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.89.0",
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
 </head>
   <body>
-    <div id="v-badge">VER: 2.2.0-ULTRA</div>
-    <div class="bg-grid"></div>
-    <div class="cyber-glow"></div>
+    <div class="cockpit-grid"></div>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

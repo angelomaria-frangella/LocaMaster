@@ -94,7 +94,6 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
     }
   }, [initialData]);
 
-  // --- LOGICA BUSINESS ---
   const calculatedNextExpiration = useMemo(() => {
     if (!formData.startDate) return null;
     
@@ -113,14 +112,11 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
     const cType = (formData.contractType || '').toLowerCase();
 
     if (cType.includes('3+2') || cType.includes('concordato')) {
-        initialDuration = 3;
-        renewalDuration = 2;
+        initialDuration = 3; renewalDuration = 2;
     } else if (cType.includes('6+6') || cType.includes('commerciale')) {
-        initialDuration = 6;
-        renewalDuration = 6;
+        initialDuration = 6; renewalDuration = 6;
     } else if (cType.includes('transitorio')) {
-        initialDuration = 1;
-        renewalDuration = 0; 
+        initialDuration = 1; renewalDuration = 0; 
     }
 
     let cursorDate = firstExp && !isNaN(firstExp.getTime()) 
@@ -159,19 +155,8 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
     { id: 'registration', label: 'Registrazione', icon: FileCheck },
   ];
 
-  // --- EVENT HANDLERS ---
   const handleContractTypeChange = (newType: ContractType) => {
       setFormData(prev => ({ ...prev, contractType: newType }));
-  };
-
-  const handleUpdateKeyAndRetry = () => {
-      if(newApiKey.length > 20) {
-          localStorage.setItem('gemini_api_key', newApiKey);
-          setNewApiKey('');
-          setShowKeyInput(false);
-          setValidationMsg(null);
-          if (currentFile) processFile(currentFile);
-      }
   };
 
   const processFile = async (file: File) => {
@@ -191,16 +176,23 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
         setAttachment({ fileName: file.name, mimeType: file.type, data: base64String });
         const data: any = await extractContractData(base64String, file.type);
         
+        // MAPPING POTENZIATO SOGGETTI
         if (data.owners && Array.isArray(data.owners) && data.owners.length > 0) {
-            setOwnersList(data.owners.map((o: any, i: number) => ({ id: Date.now().toString() + i, name: o.name || '', taxCode: o.taxCode || '', address: o.address || '' })));
-        } else if (data.ownerName) {
-            setOwnersList([{ id: Date.now().toString(), name: data.ownerName, taxCode: data.ownerTaxCode, address: data.ownerAddress }]);
+            setOwnersList(data.owners.map((o: any, i: number) => ({ 
+              id: Date.now().toString() + i, 
+              name: o.name || '', 
+              taxCode: o.taxCode || '', 
+              address: o.address || '' 
+            })));
         }
 
         if (data.tenants && Array.isArray(data.tenants) && data.tenants.length > 0) {
-            setTenantsList(data.tenants.map((t: any, i: number) => ({ id: (Date.now() + 100 + i).toString(), name: t.name || '', taxCode: t.taxCode || '', address: t.address || '' })));
-        } else if (data.tenantName) {
-            setTenantsList([{ id: (Date.now() + 1).toString(), name: data.tenantName, taxCode: data.tenantTaxCode, address: data.tenantAddress }]);
+            setTenantsList(data.tenants.map((t: any, i: number) => ({ 
+              id: (Date.now() + 100 + i).toString(), 
+              name: t.name || '', 
+              taxCode: t.taxCode || '', 
+              address: t.address || '' 
+            })));
         }
 
         setFormData(prev => ({
@@ -286,16 +278,10 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                     <Upload className="w-8 h-8 text-slate-300 group-hover:text-white" />
                 </div>
                 <h3 className="text-3xl font-bold text-white mb-3">Ingestione Documentale</h3>
-                <p className="text-slate-400 mb-8 max-w-md mx-auto leading-relaxed">Carica PDF o Immagine. L'IA di LocaMaster rileverà automaticamente se si tratta di <b>Cedolare Secca</b> o Regime Ordinario.</p>
+                <p className="text-slate-400 mb-8 max-w-md mx-auto leading-relaxed">Carica PDF o Immagine. L'IA rileverà automaticamente se si tratta di <b>Cedolare Secca</b> o Regime Ordinario, inclusi Codici Fiscali e Indirizzi.</p>
                 {validationMsg && (
                     <div className="mb-6 p-4 rounded-xl bg-rose-950/30 text-rose-300 border border-rose-900 flex flex-col items-start gap-3 text-left">
                         <div className="flex items-center gap-3"><AlertTriangle className="w-5 h-5 flex-shrink-0" /><p className="text-sm font-medium">{validationMsg.text}</p></div>
-                        {showKeyInput && (
-                            <div className="w-full mt-2 pt-3 border-t border-rose-800/50">
-                                <input type="text" value={newApiKey} onChange={(e) => setNewApiKey(e.target.value)} placeholder="Inserisci Nuova API KEY Gemini..." className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-primary-500 outline-none mb-2" />
-                                <button onClick={handleUpdateKeyAndRetry} disabled={newApiKey.length < 20} className="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2"><RefreshCw className="w-3 h-3" /> Aggiorna & Riprova</button>
-                            </div>
-                        )}
                     </div>
                 )}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -337,7 +323,6 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
         <div className="space-y-6 pb-32">
             {activeTab === 'general' && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
-                    {/* SELETTORE REGIME FISCALE - NUOVO DESIGN HIGH IMPACT */}
                     <div className="space-y-4">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Configurazione Regime Fiscale</label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -409,8 +394,8 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                                 {ownersList.length > 1 && <button onClick={() => removeParty('OWNER', owner.id)} className="absolute top-2 right-2 p-1.5 text-slate-500 hover:text-rose-400 rounded-lg"><Trash2 className="w-4 h-4" /></button>}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="md:col-span-2"><InputField label="Nome / Ragione Sociale" value={owner.name} onChange={(v: string) => updateParty('OWNER', owner.id, 'name', v)} required={index === 0} /></div>
-                                    <InputField label="Codice Fiscale" value={owner.taxCode} onChange={(v: string) => updateParty('OWNER', owner.id, 'taxCode', v)} />
-                                    <InputField label="Residenza" value={owner.address} onChange={(v: string) => updateParty('OWNER', owner.id, 'address', v)} />
+                                    <InputField label="Codice Fiscale / P.IVA" value={owner.taxCode} onChange={(v: string) => updateParty('OWNER', owner.id, 'taxCode', v)} />
+                                    <InputField label="Residenza / Sede Legale" value={owner.address} onChange={(v: string) => updateParty('OWNER', owner.id, 'address', v)} />
                                 </div>
                             </div>
                         ))}
@@ -422,8 +407,8 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                                 {tenantsList.length > 1 && <button onClick={() => removeParty('TENANT', tenant.id)} className="absolute top-2 right-2 p-1.5 text-slate-500 hover:text-rose-400 rounded-lg"><Trash2 className="w-4 h-4" /></button>}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="md:col-span-2"><InputField label="Nome / Ragione Sociale" value={tenant.name} onChange={(v: string) => updateParty('TENANT', tenant.id, 'name', v)} required={index === 0} /></div>
-                                    <InputField label="Codice Fiscale" value={tenant.taxCode} onChange={(v: string) => updateParty('TENANT', tenant.id, 'taxCode', v)} />
-                                    <InputField label="Residenza" value={tenant.address} onChange={(v: string) => updateParty('TENANT', tenant.id, 'address', v)} />
+                                    <InputField label="Codice Fiscale / P.IVA" value={tenant.taxCode} onChange={(v: string) => updateParty('TENANT', tenant.id, 'taxCode', v)} />
+                                    <InputField label="Residenza / Sede Legale" value={tenant.address} onChange={(v: string) => updateParty('TENANT', tenant.id, 'address', v)} />
                                 </div>
                             </div>
                         ))}
