@@ -69,7 +69,7 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
         completed: false
     });
 
-    // TERMINE DISDETTA (FONDAMENTALE PER LO STUDIO)
+    // TERMINE DISDETTA (Dinamico basato su noticeMonths)
     const noticeMonths = contract.clientSide === 'LOCATORE' ? (contract.noticeMonthsOwner || 6) : (contract.noticeMonthsTenant || 6);
     const noticeDate = addMonths(exp, -noticeMonths);
     deadlines.push({
@@ -82,7 +82,7 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
         date: noticeDate.toISOString().split('T')[0],
         type: DeadlineType.RESOLUTION_NOTICE,
         urgency: calculateUrgency(noticeDate),
-        description: `TERMINE DISDETTA (${noticeMonths} mesi preavviso). Se non inviata, il contratto si rinnova.`,
+        description: `TERMINE DISDETTA (${noticeMonths} mesi preavviso). Verificare intenzione del cliente.`,
         completed: false
     });
 
@@ -97,7 +97,7 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
         date: exp.toISOString().split('T')[0],
         type: DeadlineType.EXPIRATION,
         urgency: calculateUrgency(exp),
-        description: `Fine periodo contrattuale. Necessario invio RLI.`,
+        description: `Fine periodo contrattuale. Necessario RLI entro 30gg.`,
         completed: false
     });
   }

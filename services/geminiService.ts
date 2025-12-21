@@ -11,15 +11,16 @@ export const extractContractData = async (base64Data: string, mimeType: string):
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
             config: {
-                systemInstruction: `Agisci come Lia, l'AI senior di uno Studio Commercialista italiano. 
-                Sei un'esperta assoluta in RLI e contrattualistica. Devi estrarre TUTTI i dati con precisione chirurgica.
-                FOCUS CRITICO:
-                1. PARTI: Estrai tutti i Locatori e Conduttori con Nome, Codice Fiscale e Indirizzo.
-                2. IMMOBILE: Indirizzo completo e DATI CATASTALI (Foglio, Particella, Subalterno).
-                3. FISCO: Verifica se è 'Canone Concordato' (L. 431/98 art. 2 c. 3) e se c'è l'opzione 'Cedolare Secca'.
-                4. ECONOMICO: Canone annuo e Deposito cauzionale.
-                5. TEMPI: Data stipula, Data decorrenza e i MESI DI PREAVVISO per la disdetta (cerca clausole come '6 mesi', '3 mesi').
-                Restituisci SOLO JSON puro.`,
+                systemInstruction: `Agisci come Lia, l'AI senior di uno Studio Commercialista italiano esperta in RLI e contrattualistica.
+                Il tuo compito è l'estrazione TECNICA e FISCALE chirurgica. 
+                REGOLE TASSATIVE:
+                1. PARTI: Estrai TUTTI i Locatori e TUTTI i Conduttori con Nome, Codice Fiscale e Indirizzo.
+                2. IMMOBILE: Estrai Indirizzo e IDENTIFICATIVI CATASTALI (Foglio, Particella/Mappale, Subalterno, Categoria).
+                3. CANONE CONCORDATO: Verifica se il contratto cita la L. 431/98 art. 2 c. 3 o accordi territoriali. Se sì, isCanoneConcordato deve essere TRUE.
+                4. FISCO: Identifica Cedolare Secca e imposte di registro.
+                5. DATE: Estrai Stipula e Decorrenza (Inizio).
+                6. PREAVVISO: Cerca i mesi di preavviso per la disdetta (solitamente 6, ma verifica se 3 o altro).
+                Restituisci esclusivamente un JSON puro.`,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
@@ -53,7 +54,8 @@ export const extractContractData = async (base64Data: string, mimeType: string):
                                 foglio: { type: Type.STRING },
                                 particella: { type: Type.STRING },
                                 subalterno: { type: Type.STRING },
-                                categoria: { type: Type.STRING }
+                                categoria: { type: Type.STRING },
+                                rendita: { type: Type.NUMBER }
                             }
                         },
                         annualRent: { type: Type.NUMBER },
@@ -64,19 +66,20 @@ export const extractContractData = async (base64Data: string, mimeType: string):
                         cedolareSecca: { type: Type.BOOLEAN },
                         isCanoneConcordato: { type: Type.BOOLEAN },
                         noticeMonthsOwner: { type: Type.NUMBER },
-                        noticeMonthsTenant: { type: Type.NUMBER }
+                        noticeMonthsTenant: { type: Type.NUMBER },
+                        usageType: { type: Type.STRING }
                     },
-                    required: ["startDate", "owners", "tenants", "propertyAddress"]
+                    required: ["startDate", "propertyAddress"]
                 }
             },
-            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Esegui analisi tecnica del contratto per Studio Commercialista." }] }]
+            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Analisi tecnica contratto per fini fiscali e registrazione RLI." }] }]
         });
         
         let text = response.text || "{}";
         text = text.replace(/```json/g, "").replace(/```/g, "").trim();
         return JSON.parse(text);
     } catch (e) {
-        console.error("Lia Critical Extraction Error:", e);
+        console.error("Lia Extraction Error:", e);
         return {};
     }
 };
@@ -88,10 +91,8 @@ export const generateFiscalReport = async (contracts: Contract[], type: string, 
             ? `Genera un'email professionale per lo studio ${studioSettings?.name || 'Commercialista'}. 
                Cliente: ${subjectName}. Scadenza: ${selectedDeadline?.type}. Data: ${selectedDeadline?.date}. 
                Immobile: ${selectedDeadline?.contractAddress}.
-               Contenuto: Spiega l'adempimento, i termini legali e cosa deve fare il cliente. 
-               Restituisci JSON con chiavi "subject" e "body" (HTML).`
-            : `Genera un report fiscale HTML professionale per ${subjectName}. Contratti: ${JSON.stringify(contracts)}. 
-               Includi analisi scadenze, calcoli imposte e proiezioni fiscali. Usa Tailwind CSS inline.`;
+               Usa un tono autorevole. Restituisci JSON con "subject" e "body" (HTML).`
+            : `Genera report HTML professionale. Contratti: ${JSON.stringify(contracts)}. Usa Tailwind CSS inline. Includi dettagli catastali e fiscali.`;
 
         const response = await ai.models.generateContent({
             model: MODEL_PRO,
@@ -111,14 +112,27 @@ export const generateFiscalReport = async (contracts: Contract[], type: string, 
     }
 };
 
+export const analyzeLeaseStrategy = async (userMsg: string, contracts: Contract[], focusedContract: Contract | null, history: any[]): Promise<string> => {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+        model: MODEL_PRO,
+        contents: [...history.map(m => ({role: m.role === 'ai' ? 'model' : 'user', parts: [{text: m.content}]})), {role: 'user', parts: [{text: userMsg}]}],
+        config: { 
+            systemInstruction: `Sei Lia. Esperta di L. 431/98 e L. 392/78. 
+            Rispondi come un consulente senior dello studio commercialista. 
+            Analizza scadenze, dati catastali e calcoli fiscali con precisione assoluta.` 
+        }
+    });
+    return response.text || "";
+};
+
 export const generatePortfolioInsights = async (contracts: Contract[]): Promise<{category: string, text: string}[]> => {
     if (!contracts || contracts.length === 0) return [];
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
-            contents: `Analizza strategicamente questo portfolio di locazioni: ${JSON.stringify(contracts)}. 
-            Identifica rischi di morosità, scadenze disdetta critiche e opportunità di risparmio fiscale.`,
+            contents: `Analizza portfolio: ${JSON.stringify(contracts)}. Identifica rischi di morosità, scadenze disdetta e opportunità fiscali (es. passaggio a concordato).`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -129,19 +143,4 @@ export const generatePortfolioInsights = async (contracts: Contract[]): Promise<
         });
         return JSON.parse(response.text?.replace(/```json/g, "").replace(/```/g, "").trim() || "[]");
     } catch (e) { return []; }
-};
-
-export const analyzeLeaseStrategy = async (userMsg: string, contracts: Contract[], focusedContract: Contract | null, history: any[]): Promise<string> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-        model: MODEL_PRO,
-        contents: [...history.map(m => ({role: m.role === 'ai' ? 'model' : 'user', parts: [{text: m.content}]})), {role: 'user', parts: [{text: userMsg}]}],
-        config: { 
-            systemInstruction: `Sei Lia, assistente d'intelligence senior di uno Studio Commercialista. 
-            Conosci perfettamente la L. 431/98 e la L. 392/78. 
-            Le tue risposte devono essere tecnicamente ineccepibili, basate su DATE certe e calcoli fiscali esatti. 
-            Se ti chiedono una bozza di lettera, scrivila in modo formale e legale.` 
-        }
-    });
-    return response.text || "";
 };

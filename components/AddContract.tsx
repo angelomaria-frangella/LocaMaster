@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Upload, Sparkles, User, Building2, Euro, Save, 
   Landmark, FileDigit, AlertTriangle, Calendar, MapPin, 
-  Hash, Info, PlusCircle, Home, Clock, ShieldCheck, UserCheck
+  Hash, Info, PlusCircle, Home, Clock, ShieldCheck, UserCheck, Trash2
 } from 'lucide-react';
 import { extractContractData } from '../services/geminiService';
 import { Contract, ContractType, ClientSide } from '../types';
@@ -61,6 +61,8 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
     stipulationDate: '',
     cedolareSecca: false,
     isCanoneConcordato: false,
+    noticeMonthsOwner: 6,
+    noticeMonthsTenant: 6,
     cadastral: { foglio: '', particella: '', subalterno: '', categoria: '', rendita: 0 },
     registration: { date: '', office: '', series: '', number: '' }
   });
@@ -78,26 +80,34 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
     reader.onload = async () => {
       try {
         const base64String = (reader.result as string).split(',')[1];
-        const data: any = await extractContractData(base64String, file.type);
+        const extractedData: any = await extractContractData(base64String, file.type);
         
-        let finalContractType = data.contractType || formData.contractType;
-        if (data.isCanoneConcordato) {
-          finalContractType = ContractType.ABITATIVO_CONCORDATO_3_2;
-        }
+        let finalType = extractedData.contractType || formData.contractType;
+        if (extractedData.isCanoneConcordato) finalType = ContractType.ABITATIVO_CONCORDATO_3_2;
 
         setFormData(prev => ({
           ...prev,
-          ...data,
-          ownerName: data.owners?.[0]?.name || '',
-          tenantName: data.tenants?.[0]?.name || '',
-          contractType: finalContractType,
-          startDate: data.startDate || '',
-          stipulationDate: data.stipulationDate || '',
-          usageType: data.usageType || "Abitativo",
+          ...extractedData,
+          owners: extractedData.owners && extractedData.owners.length > 0 ? extractedData.owners : prev.owners,
+          tenants: extractedData.tenants && extractedData.tenants.length > 0 ? extractedData.tenants : prev.tenants,
+          ownerName: extractedData.owners?.[0]?.name || prev.ownerName,
+          tenantName: extractedData.tenants?.[0]?.name || prev.tenantName,
+          contractType: finalType,
+          cadastral: { 
+            foglio: extractedData.cadastral?.foglio || prev.cadastral?.foglio || '',
+            particella: extractedData.cadastral?.particella || prev.cadastral?.particella || '',
+            subalterno: extractedData.cadastral?.subalterno || prev.cadastral?.subalterno || '',
+            categoria: extractedData.cadastral?.categoria || prev.cadastral?.categoria || '',
+            rendita: extractedData.cadastral?.rendita || prev.cadastral?.rendita || 0
+          },
           attachment: { fileName: file.name, mimeType: file.type, data: base64String }
         }));
         setStep('review');
-      } catch (err) { console.error(err); } finally { setIsProcessing(false); }
+      } catch (err) { 
+        console.error("Critical AI Processing Error:", err); 
+      } finally { 
+        setIsProcessing(false); 
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -107,6 +117,10 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
     setFormData(prev => ({ ...prev, [type]: [...prev[type], newParty] }));
   };
 
+  const removeParty = (type: 'owners' | 'tenants', id: string) => {
+    setFormData(prev => ({ ...prev, [type]: prev[type].filter(p => p.id !== id) }));
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto h-full flex flex-col gap-6">
       {step === 'upload' ? (
@@ -114,8 +128,8 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
           {isProcessing ? (
              <div className="text-center space-y-6">
                <div className="w-24 h-24 border-b-4 border-primary-500 rounded-full animate-spin mx-auto" />
-               <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase">Protocollo Scan...</h3>
-               <p className="text-primary-500 font-mono text-xs animate-pulse">ESTRAZIONE DATI TRIBUTARI RLI</p>
+               <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase">Protocollo Scan Lia...</h3>
+               <p className="text-primary-500 font-mono text-xs animate-pulse">ESTRAZIONE INTEGRALE IN CORSO</p>
              </div>
           ) : (
              <>
@@ -124,7 +138,7 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                   <FileDigit className="w-16 h-16 text-primary-500 relative z-10" />
                </div>
                <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">Ingresso Pratica</h3>
-               <p className="text-slate-500 mb-10 text-center max-w-md font-bold uppercase text-[10px] tracking-[0.3em]">Studio Commercialista - LocaMaster AI</p>
+               <p className="text-slate-500 mb-10 text-center max-w-md font-bold uppercase text-[10px] tracking-[0.3em]">Trascina qui il contratto RLI per l'estrazione automatica</p>
                <label className="cursor-pointer px-16 py-6 bg-primary-600 hover:bg-primary-500 text-white rounded-2xl font-black uppercase tracking-[0.2em] transition-all shadow-2xl hover:scale-105">
                  Analizza Contratto
                  <input type="file" className="hidden" accept=".pdf,image/*" onChange={(e) => e.target.files?.[0] && processFile(e.target.files[0])} />
@@ -135,38 +149,20 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
       ) : (
         <div className="flex-1 flex flex-col min-h-0 bg-slate-900 border border-white/5 rounded-[2.5rem] p-8 backdrop-blur-xl relative hud-border overflow-hidden">
             <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/5">
-                <div className="flex items-center gap-6">
-                   <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
-                      <Clock className="w-7 h-7 text-primary-500" /> Verifica Dati Estrazione <span className="text-slate-700">/</span> <span className="text-primary-500">{formData.propertyAddress || 'Bozza'}</span>
-                   </h2>
-                </div>
+                <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
+                    <Clock className="w-7 h-7 text-primary-500" /> Verifica Dati Estrazione <span className="text-slate-700">/</span> <span className="text-primary-500">{formData.propertyAddress || 'Nuova Pratica'}</span>
+                </h2>
                 <div className="flex gap-4">
-                    <button onClick={onCancel} className="px-6 py-3 bg-slate-800 hover:bg-rose-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">Elimina</button>
-                    <button onClick={() => onConfirmSave(formData, true)} className="px-8 py-3 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> Conferma in Archivio</button>
+                    <button onClick={onCancel} className="px-6 py-3 bg-slate-800 hover:bg-rose-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">Annulla</button>
+                    <button onClick={() => onConfirmSave(formData, true)} className="px-8 py-3 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> Salva Asset</button>
                 </div>
-            </div>
-
-            {/* SELETTORE PARTE ASSISTITA */}
-            <div className="mb-8 p-1.5 bg-slate-950 border border-slate-800 rounded-2xl flex max-w-lg mx-auto overflow-hidden shadow-2xl">
-                <button 
-                  onClick={() => setFormData(p => ({...p, clientSide: 'LOCATORE'}))}
-                  className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest ${formData.clientSide === 'LOCATORE' ? 'bg-primary-600 text-white shadow-xl shadow-primary-600/20' : 'text-slate-500 hover:text-slate-300'}`}
-                >
-                    <Building2 className="w-4 h-4" /> Assisti Locatore
-                </button>
-                <button 
-                  onClick={() => setFormData(p => ({...p, clientSide: 'CONDUTTORE'}))}
-                  className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest ${formData.clientSide === 'CONDUTTORE' ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20' : 'text-slate-500 hover:text-slate-300'}`}
-                >
-                    <UserCheck className="w-4 h-4" /> Assisti Conduttore
-                </button>
             </div>
 
             <div className="flex gap-3 mb-8 overflow-x-auto no-scrollbar">
                 {[
-                  { id: 'anagrafica', label: 'Anagrafiche Parti', icon: User },
-                  { id: 'economico', label: 'Date e Canoni', icon: Euro },
-                  { id: 'immobile', label: 'Dati Immobile', icon: Landmark }
+                  { id: 'anagrafica', label: 'Parti del Contratto', icon: User },
+                  { id: 'economico', label: 'Fisco e Canoni', icon: Euro },
+                  { id: 'immobile', label: 'Dati Catastali', icon: Landmark }
                 ].map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-6 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-3 border ${activeTab === tab.id ? 'bg-primary-600 text-white border-primary-400 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'bg-slate-800/40 text-slate-500 border-white/5 hover:text-slate-300'}`}>
                         <tab.icon className="w-4 h-4" /> {tab.label}
@@ -174,53 +170,43 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                 ))}
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-2 space-y-8 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto pr-2 space-y-8 no-scrollbar">
                 {activeTab === 'anagrafica' && (
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                      {/* Locatori */}
-                      <div className={`space-y-6 p-8 rounded-[2rem] border transition-all ${formData.clientSide === 'LOCATORE' ? 'bg-primary-600/5 border-primary-500/30 ring-1 ring-primary-500/20' : 'bg-slate-950/40 border-white/5 opacity-60'}`}>
-                          <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em] flex justify-between items-center">
-                            Locatori (Proprietà) 
-                            <div className="flex gap-2">
-                                {formData.clientSide === 'LOCATORE' && <span className="bg-primary-600 text-white text-[8px] px-2 py-0.5 rounded-full shadow-lg animate-pulse">CLIENTE STUDIO</span>}
-                                <button onClick={() => addParty('owners')}><PlusCircle className="w-4 h-4" /></button>
-                            </div>
-                          </h4>
+                      <div className="space-y-6 p-8 bg-slate-950/40 rounded-[2rem] border border-white/5">
+                          <div className="flex justify-between items-center mb-4">
+                             <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em]">Proprietà (Locatori)</h4>
+                             <button onClick={() => addParty('owners')} className="p-2 bg-primary-600/10 text-primary-500 rounded-lg"><PlusCircle className="w-4 h-4" /></button>
+                          </div>
                           {formData.owners.map((owner, idx) => (
-                            <div key={owner.id} className="space-y-4 p-6 bg-slate-900/50 rounded-2xl border border-white/5">
+                            <div key={owner.id} className="space-y-4 p-6 bg-slate-900/50 rounded-2xl border border-white/5 relative group">
+                                {idx > 0 && <button onClick={() => removeParty('owners', owner.id)} className="absolute top-4 right-4 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4"/></button>}
                                 <InputField label="Nome / Ragione Sociale" value={owner.name} onChange={(v: string) => {
-                                    const newOwners = [...formData.owners];
-                                    newOwners[idx].name = v;
-                                    setFormData(p => ({...p, owners: newOwners, ownerName: newOwners[0].name }));
+                                    const next = [...formData.owners]; next[idx].name = v;
+                                    setFormData(p => ({...p, owners: next, ownerName: next[0].name }));
                                 }} required icon={User} />
-                                <InputField label="C.F. / P.IVA" value={owner.taxCode} onChange={(v: string) => {
-                                    const newOwners = [...formData.owners];
-                                    newOwners[idx].taxCode = v;
-                                    setFormData(p => ({...p, owners: newOwners}));
+                                <InputField label="Codice Fiscale / P.IVA" value={owner.taxCode} onChange={(v: string) => {
+                                    const next = [...formData.owners]; next[idx].taxCode = v;
+                                    setFormData(p => ({...p, owners: next}));
                                 }} required icon={Hash} />
                             </div>
                           ))}
                       </div>
-                      {/* Conduttori */}
-                      <div className={`space-y-6 p-8 rounded-[2rem] border transition-all ${formData.clientSide === 'CONDUTTORE' ? 'bg-indigo-600/5 border-indigo-500/30 ring-1 ring-indigo-500/20' : 'bg-slate-950/40 border-white/5 opacity-60'}`}>
-                          <h4 className="text-xs font-black text-indigo-400 uppercase tracking-[0.3em] flex justify-between items-center">
-                            Conduttori (Locatari)
-                            <div className="flex gap-2">
-                                {formData.clientSide === 'CONDUTTORE' && <span className="bg-indigo-600 text-white text-[8px] px-2 py-0.5 rounded-full shadow-lg animate-pulse">CLIENTE STUDIO</span>}
-                                <button onClick={() => addParty('tenants')}><PlusCircle className="w-4 h-4" /></button>
-                            </div>
-                          </h4>
+                      <div className="space-y-6 p-8 bg-slate-950/40 rounded-[2rem] border border-white/5">
+                          <div className="flex justify-between items-center mb-4">
+                             <h4 className="text-xs font-black text-indigo-400 uppercase tracking-[0.3em]">Locatari (Conduttori)</h4>
+                             <button onClick={() => addParty('tenants')} className="p-2 bg-indigo-600/10 text-indigo-400 rounded-lg"><PlusCircle className="w-4 h-4" /></button>
+                          </div>
                           {formData.tenants.map((tenant, idx) => (
-                            <div key={tenant.id} className="space-y-4 p-6 bg-slate-900/50 rounded-2xl border border-white/5">
+                            <div key={tenant.id} className="space-y-4 p-6 bg-slate-900/50 rounded-2xl border border-white/5 relative group">
+                                {idx > 0 && <button onClick={() => removeParty('tenants', tenant.id)} className="absolute top-4 right-4 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4"/></button>}
                                 <InputField label="Nome / Ragione Sociale" value={tenant.name} onChange={(v: string) => {
-                                    const newTenants = [...formData.tenants];
-                                    newTenants[idx].name = v;
-                                    setFormData(p => ({...p, tenants: newTenants, tenantName: newTenants[0].name }));
+                                    const next = [...formData.tenants]; next[idx].name = v;
+                                    setFormData(p => ({...p, tenants: next, tenantName: next[0].name }));
                                 }} required icon={User} />
-                                <InputField label="C.F. / P.IVA" value={tenant.taxCode} onChange={(v: string) => {
-                                    const newTenants = [...formData.tenants];
-                                    newTenants[idx].taxCode = v;
-                                    setFormData(p => ({...p, tenants: newTenants}));
+                                <InputField label="Codice Fiscale / P.IVA" value={tenant.taxCode} onChange={(v: string) => {
+                                    const next = [...formData.tenants]; next[idx].taxCode = v;
+                                    setFormData(p => ({...p, tenants: next}));
                                 }} required icon={Hash} />
                             </div>
                           ))}
@@ -231,9 +217,15 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                 {activeTab === 'economico' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-6 bg-slate-950/40 p-8 rounded-[2rem] border border-white/5">
-                          <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em]">Cronologia e Tipologia</h4>
-                          <InputField label="Data Decorrenza" type="date" value={formData.startDate} onChange={(v: string) => setFormData(p => ({...p, startDate: v}))} required icon={Calendar} />
-                          <InputField label="Data Stipula" type="date" value={formData.stipulationDate} onChange={(v: string) => setFormData(p => ({...p, stipulationDate: v}))} required icon={Clock} />
+                          <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em]">Date e Durata</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <InputField label="Decorrenza" type="date" value={formData.startDate} onChange={(v: string) => setFormData(p => ({...p, startDate: v}))} required icon={Calendar} />
+                            <InputField label="Stipula" type="date" value={formData.stipulationDate} onChange={(v: string) => setFormData(p => ({...p, stipulationDate: v}))} required icon={Clock} />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <InputField label="Preavviso Locatore (Mesi)" type="number" value={formData.noticeMonthsOwner} onChange={(v: number) => setFormData(p => ({...p, noticeMonthsOwner: v}))} icon={Info} />
+                            <InputField label="Preavviso Conduttore (Mesi)" type="number" value={formData.noticeMonthsTenant} onChange={(v: number) => setFormData(p => ({...p, noticeMonthsTenant: v}))} icon={Info} />
+                          </div>
                           <div className="space-y-2">
                              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Modello Contrattuale</label>
                              <select value={formData.contractType} onChange={(e) => setFormData(p => ({...p, contractType: e.target.value as ContractType}))} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-bold outline-none focus:border-primary-500">
@@ -242,31 +234,31 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                           </div>
                       </div>
                       <div className="space-y-6 bg-slate-950/40 p-8 rounded-[2rem] border border-white/5">
-                          <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em]">Aspetti Fiscali</h4>
-                          <InputField label="Canone Annuo €" type="number" value={formData.annualRent} onChange={(v: number) => setFormData(p => ({...p, annualRent: v}))} required icon={Euro} />
+                          <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em]">Canoni e Opzioni Fiscali</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <InputField label="Canone Annuo €" type="number" value={formData.annualRent} onChange={(v: number) => setFormData(p => ({...p, annualRent: v}))} required icon={Euro} />
+                            <InputField label="Deposito €" type="number" value={formData.deposit} onChange={(v: number) => setFormData(p => ({...p, deposit: v}))} icon={Landmark} />
+                          </div>
                           <div className="flex items-center gap-4 p-5 bg-primary-500/10 border border-primary-500/30 rounded-2xl cursor-pointer" onClick={() => setFormData(p => ({...p, isCanoneConcordato: !p.isCanoneConcordato}))}>
                              <Sparkles className={`w-8 h-8 ${formData.isCanoneConcordato ? 'text-primary-500' : 'text-slate-600'}`} />
                              <div className="flex-1">
-                                <p className="text-sm font-black text-white uppercase tracking-tighter">Canone Concordato</p>
-                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">L. 431/98</p>
+                                <p className="text-sm font-black text-white uppercase tracking-tighter italic">Canone Concordato (3+2)</p>
+                                <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Agevolazione IMU / IRPEF</p>
                              </div>
                              <div className={`w-12 h-6 rounded-full relative transition-all ${formData.isCanoneConcordato ? 'bg-primary-500' : 'bg-slate-800'}`}>
                                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.isCanoneConcordato ? 'left-7' : 'left-1'}`}></div>
                              </div>
                           </div>
-                          
-                          {formData.clientSide === 'LOCATORE' && (
-                             <div className="flex items-center gap-4 p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl cursor-pointer" onClick={() => setFormData(p => ({...p, cedolareSecca: !p.cedolareSecca}))}>
-                                <ShieldCheck className={`w-8 h-8 ${formData.cedolareSecca ? 'text-emerald-400' : 'text-slate-600'}`} />
-                                <div className="flex-1">
-                                    <p className="text-sm font-black text-white uppercase tracking-tighter">Cedolare Secca</p>
-                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest italic">Opzione fiscale locatore</p>
-                                </div>
-                                <div className={`w-12 h-6 rounded-full relative transition-all ${formData.cedolareSecca ? 'bg-emerald-500' : 'bg-slate-800'}`}>
-                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.cedolareSecca ? 'left-7' : 'left-1'}`}></div>
-                                </div>
+                          <div className="flex items-center gap-4 p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl cursor-pointer" onClick={() => setFormData(p => ({...p, cedolareSecca: !p.cedolareSecca}))}>
+                             <ShieldCheck className={`w-8 h-8 ${formData.cedolareSecca ? 'text-emerald-400' : 'text-slate-600'}`} />
+                             <div className="flex-1">
+                                <p className="text-sm font-black text-white uppercase tracking-tighter italic">Cedolare Secca</p>
+                                <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Esenzione Imposta Registro</p>
                              </div>
-                          )}
+                             <div className={`w-12 h-6 rounded-full relative transition-all ${formData.cedolareSecca ? 'bg-emerald-500' : 'bg-slate-800'}`}>
+                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.cedolareSecca ? 'left-7' : 'left-1'}`}></div>
+                             </div>
+                          </div>
                       </div>
                   </div>
                 )}
@@ -276,14 +268,17 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                       <div className="space-y-6 bg-slate-950/40 p-8 rounded-[2rem] border border-white/5">
                           <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em]">Localizzazione</h4>
                           <InputField label="Indirizzo Immobile" value={formData.propertyAddress} onChange={(v: string) => setFormData(p => ({...p, propertyAddress: v}))} required icon={MapPin} />
-                          <InputField label="Destinazione Uso" value={formData.usageType} onChange={(v: string) => setFormData(p => ({...p, usageType: v}))} icon={Info} />
+                          <InputField label="Uso Prevalente" value={formData.usageType} onChange={(v: string) => setFormData(p => ({...p, usageType: v}))} icon={Home} />
                       </div>
                       <div className="space-y-6 bg-slate-950/40 p-8 rounded-[2rem] border border-white/5">
-                          <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em]">Identificativi Catastali</h4>
-                          <div className="grid grid-cols-3 gap-4">
-                            <InputField label="Foglio" value={formData.cadastral?.foglio} onChange={(v: string) => setFormData(p => ({...p, cadastral: {...p.cadastral, foglio: v}}))} />
-                            <InputField label="Particella" value={formData.cadastral?.particella} onChange={(v: string) => setFormData(p => ({...p, cadastral: {...p.cadastral, particella: v}}))} />
-                            <InputField label="Subalterno" value={formData.cadastral?.subalterno} onChange={(v: string) => setFormData(p => ({...p, cadastral: {...p.cadastral, subalterno: v}}))} />
+                          <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em]">Identificativi Catastali RLI</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                             <InputField label="Foglio" value={formData.cadastral?.foglio} onChange={(v: string) => setFormData(p => ({...p, cadastral: {...p.cadastral, foglio: v}}))} icon={Hash} />
+                             <InputField label="Particella / Mappale" value={formData.cadastral?.particella} onChange={(v: string) => setFormData(p => ({...p, cadastral: {...p.cadastral, particella: v}}))} icon={Hash} />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                             <InputField label="Subalterno" value={formData.cadastral?.subalterno} onChange={(v: string) => setFormData(p => ({...p, cadastral: {...p.cadastral, subalterno: v}}))} icon={Hash} />
+                             <InputField label="Categoria" value={formData.cadastral?.categoria} onChange={(v: string) => setFormData(p => ({...p, cadastral: {...p.cadastral, categoria: v}}))} icon={Landmark} />
                           </div>
                       </div>
                   </div>
