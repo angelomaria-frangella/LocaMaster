@@ -1,21 +1,15 @@
 
-import { Contract, DeadlineEvent, DeadlineType, UrgencyLevel } from '../types';
+import { Contract, DeadlineEvent, DeadlineType, UrgencyLevel, ClientSide } from '../types';
 
 // --- PURE HELPER FUNCTIONS ---
 
 /**
  * BLINDATURA FISCALE: Questa è la Single Source of Truth.
- * Gestisce conversioni da stringa, null, undefined, booleano o nomi di colonna alternativi (DB).
  */
 export const isCedolareActive = (val: any): boolean => {
-  // Se il valore è già un booleano puro
   if (val === true || val === 'true' || val === 1 || val === '1') return true;
   if (val === false || val === 'false' || val === 0 || val === '0') return false;
-  
-  // Se il valore è null o undefined, per default è false
   if (val === null || val === undefined) return false;
-  
-  // Se è una stringa, puliamo e analizziamo (per sicurezza estrema)
   const s = String(val).toLowerCase().trim();
   const positiveValues = ['true', '1', 'yes', 'si', 'on', 'active', 'cedolare', 'cedolare_secca'];
   return positiveValues.includes(s);
@@ -52,7 +46,7 @@ export const calculateUrgency = (deadlineDate: Date): UrgencyLevel => {
 };
 
 /**
- * GENERATORE DI SCADENZE (CORE LOGIC)
+ * GENERATORE DI SCADENZE ADATTIVO (CORE LOGIC)
  */
 export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
   let deadlines: DeadlineEvent[] = [];
@@ -69,8 +63,8 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
     const start = new Date(contract.startDate);
     if (isNaN(start.getTime())) continue; 
 
-    // BLINDATURA: Anche nel calcolo delle scadenze forziamo la normalizzazione
     const hasCedolare = isCedolareActive(contract.cedolareSecca);
+    const isClientLocatore = contract.clientSide === 'LOCATORE';
     
     const earlyTermDate = contract.earlyTerminationDate ? new Date(contract.earlyTerminationDate) : null;
 
@@ -107,6 +101,16 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
     const nextExpirationDate = earlyTermDate || expirationCursor;
     const isNextEventRenewal = !earlyTermDate && renewalDuration > 0;
     
+    // Descrizione adattiva per scadenza
+    let expirationDesc = "";
+    if (earlyTermDate) {
+        expirationDesc = isClientLocatore ? "Rilascio immobile da parte del conduttore" : "Termine ultimo per rilascio e riconsegna chiavi";
+    } else if (isNextEventRenewal) {
+        expirationDesc = isClientLocatore ? "Proroga tacita contratto (Verifica canone)" : "Rinnovo automatico (Verifica invio disdetta se necessario)";
+    } else {
+        expirationDesc = "Fine definitiva locazione (No rinnovo)";
+    }
+
     deadlines.push({
         id: `exp-${contract.id}-${nextExpirationDate.getFullYear()}`,
         contractId: contract.id,
@@ -117,17 +121,24 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
         date: nextExpirationDate.toISOString().split('T')[0],
         type: isNextEventRenewal ? DeadlineType.CONTRACT_RENEWAL : DeadlineType.EXPIRATION,
         urgency: calculateUrgency(nextExpirationDate),
-        description: isNextEventRenewal ? "Scadenza Periodo (Rinnovo Tacito)" : (earlyTermDate ? "Data di Risoluzione / Rilascio" : "Scadenza Naturale Definitiva"),
+        description: expirationDesc,
         completed: false
     });
 
     if (isNextEventRenewal) {
         const rliDeadlineDate = new Date(nextExpirationDate);
         rliDeadlineDate.setDate(rliDeadlineDate.getDate() + 30);
-        const rliDesc = hasCedolare
-             ? "SCADENZA INVIO RLI (Proroga). ESENTE IMPOSTA (Cedolare)."
-             : "SCADENZA RLI + IMPOSTA (Proroga). Versamento entro 30gg.";
-        const rliType = hasCedolare ? DeadlineType.RLI_OBLIGATION : DeadlineType.REGISTRATION_TAX;
+        
+        let rliDesc = "";
+        if (hasCedolare) {
+            rliDesc = isClientLocatore 
+                ? "Adempimento RLI Proroga (Opzione Cedolare Confermata). No imposta." 
+                : "Verifica che il locatore comunichi la proroga in Cedolare.";
+        } else {
+            rliDesc = isClientLocatore 
+                ? "Versamento Imposta Registro 30gg (Proroga). Calcola 2% o fisso." 
+                : "Verifica avvenuto versamento imposta di registro da parte del locatore.";
+        }
 
         deadlines.push({
             id: `rli-ren-${contract.id}-${rliDeadlineDate.getFullYear()}`,
@@ -137,13 +148,14 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
             ownerName: contract.ownerName,
             clientSide: contract.clientSide,
             date: rliDeadlineDate.toISOString().split('T')[0],
-            type: rliType, 
+            type: hasCedolare ? DeadlineType.RLI_OBLIGATION : DeadlineType.REGISTRATION_TAX,
             urgency: calculateUrgency(rliDeadlineDate),
             description: rliDesc,
             completed: false
         });
     }
 
+    // Scadenze annuali imposta registro (solo se no cedolare)
     if (!hasCedolare && !earlyTermDate) {
         const contractMonth = start.getMonth();
         const contractDay = start.getDate();
@@ -167,12 +179,15 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
                 date: paymentDeadline.toISOString().split('T')[0],
                 type: DeadlineType.REGISTRATION_TAX,
                 urgency: calculateUrgency(paymentDeadline),
-                description: `Pagamento imposta registro annualità ${paymentDeadline.getFullYear()}`,
+                description: isClientLocatore 
+                    ? `Versamento annualità registro ${paymentDeadline.getFullYear()} (Gestione F24 Elide)`
+                    : `Controllo versamento annualità registro ${paymentDeadline.getFullYear()} (Quota 50% spettante)`,
                 completed: false
             });
         }
     }
 
+    // Termine disdetta
     if (!earlyTermDate) {
         let noticeMonths = contract.clientSide === 'LOCATORE' 
             ? (contract.noticeMonthsOwner || 6) 
@@ -190,7 +205,9 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
                 date: noticeDeadline.toISOString().split('T')[0],
                 type: DeadlineType.RESOLUTION_NOTICE,
                 urgency: calculateUrgency(noticeDeadline),
-                description: `Termine ultimo per disdetta (${noticeMonths} mesi)`,
+                description: isClientLocatore 
+                    ? `Limite invio diniego rinnovo al conduttore (${noticeMonths} mesi)`
+                    : `Limite invio disdetta per evitare rinnovo automatico (${noticeMonths} mesi)`,
                 completed: false
             });
         }

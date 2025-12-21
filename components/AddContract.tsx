@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   Upload, Sparkles, User, Building2, Euro, Save, 
   Landmark, FileDigit, AlertTriangle, Calendar, MapPin, 
-  Hash, Info, PlusCircle, Home, Clock
+  Hash, Info, PlusCircle, Home, Clock, ShieldCheck, UserCheck
 } from 'lucide-react';
 import { extractContractData } from '../services/geminiService';
-import { Contract, ContractType } from '../types';
+import { Contract, ContractType, ClientSide } from '../types';
 
 const InputField = ({ label, value, onChange, type = "text", placeholder = "", required = false, isAlert = false, icon: Icon }: any) => {
     const isEmpty = required && (!value || value === 0 || value === '');
@@ -47,7 +47,7 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
   const [formData, setFormData] = useState<Contract>({
     id: initialData?.id || Math.random().toString(36).substr(2, 9),
     isActive: true,
-    clientSide: 'LOCATORE',
+    clientSide: initialData?.clientSide || 'LOCATORE',
     ownerName: '',
     owners: [{ id: '1', name: '', taxCode: '', address: '' }],
     tenantName: '',
@@ -146,6 +146,22 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                 </div>
             </div>
 
+            {/* SELETTORE PARTE ASSISTITA */}
+            <div className="mb-8 p-1.5 bg-slate-950 border border-slate-800 rounded-2xl flex max-w-lg mx-auto overflow-hidden shadow-2xl">
+                <button 
+                  onClick={() => setFormData(p => ({...p, clientSide: 'LOCATORE'}))}
+                  className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest ${formData.clientSide === 'LOCATORE' ? 'bg-primary-600 text-white shadow-xl shadow-primary-600/20' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                    <Building2 className="w-4 h-4" /> Assisti Locatore
+                </button>
+                <button 
+                  onClick={() => setFormData(p => ({...p, clientSide: 'CONDUTTORE'}))}
+                  className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest ${formData.clientSide === 'CONDUTTORE' ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                    <UserCheck className="w-4 h-4" /> Assisti Conduttore
+                </button>
+            </div>
+
             <div className="flex gap-3 mb-8 overflow-x-auto no-scrollbar">
                 {[
                   { id: 'anagrafica', label: 'Anagrafiche Parti', icon: User },
@@ -162,8 +178,14 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                 {activeTab === 'anagrafica' && (
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                       {/* Locatori */}
-                      <div className="space-y-6 bg-slate-950/40 p-8 rounded-[2rem] border border-white/5">
-                          <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em] flex justify-between">Locatori (Proprietà) <button onClick={() => addParty('owners')}><PlusCircle className="w-4 h-4" /></button></h4>
+                      <div className={`space-y-6 p-8 rounded-[2rem] border transition-all ${formData.clientSide === 'LOCATORE' ? 'bg-primary-600/5 border-primary-500/30 ring-1 ring-primary-500/20' : 'bg-slate-950/40 border-white/5 opacity-60'}`}>
+                          <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em] flex justify-between items-center">
+                            Locatori (Proprietà) 
+                            <div className="flex gap-2">
+                                {formData.clientSide === 'LOCATORE' && <span className="bg-primary-600 text-white text-[8px] px-2 py-0.5 rounded-full shadow-lg animate-pulse">CLIENTE STUDIO</span>}
+                                <button onClick={() => addParty('owners')}><PlusCircle className="w-4 h-4" /></button>
+                            </div>
+                          </h4>
                           {formData.owners.map((owner, idx) => (
                             <div key={owner.id} className="space-y-4 p-6 bg-slate-900/50 rounded-2xl border border-white/5">
                                 <InputField label="Nome / Ragione Sociale" value={owner.name} onChange={(v: string) => {
@@ -180,8 +202,14 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                           ))}
                       </div>
                       {/* Conduttori */}
-                      <div className="space-y-6 bg-slate-950/40 p-8 rounded-[2rem] border border-white/5">
-                          <h4 className="text-xs font-black text-primary-500 uppercase tracking-[0.3em] flex justify-between">Conduttori (Locatari) <button onClick={() => addParty('tenants')}><PlusCircle className="w-4 h-4" /></button></h4>
+                      <div className={`space-y-6 p-8 rounded-[2rem] border transition-all ${formData.clientSide === 'CONDUTTORE' ? 'bg-indigo-600/5 border-indigo-500/30 ring-1 ring-indigo-500/20' : 'bg-slate-950/40 border-white/5 opacity-60'}`}>
+                          <h4 className="text-xs font-black text-indigo-400 uppercase tracking-[0.3em] flex justify-between items-center">
+                            Conduttori (Locatari)
+                            <div className="flex gap-2">
+                                {formData.clientSide === 'CONDUTTORE' && <span className="bg-indigo-600 text-white text-[8px] px-2 py-0.5 rounded-full shadow-lg animate-pulse">CLIENTE STUDIO</span>}
+                                <button onClick={() => addParty('tenants')}><PlusCircle className="w-4 h-4" /></button>
+                            </div>
+                          </h4>
                           {formData.tenants.map((tenant, idx) => (
                             <div key={tenant.id} className="space-y-4 p-6 bg-slate-900/50 rounded-2xl border border-white/5">
                                 <InputField label="Nome / Ragione Sociale" value={tenant.name} onChange={(v: string) => {
@@ -226,6 +254,19 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.isCanoneConcordato ? 'left-7' : 'left-1'}`}></div>
                              </div>
                           </div>
+                          
+                          {formData.clientSide === 'LOCATORE' && (
+                             <div className="flex items-center gap-4 p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl cursor-pointer" onClick={() => setFormData(p => ({...p, cedolareSecca: !p.cedolareSecca}))}>
+                                <ShieldCheck className={`w-8 h-8 ${formData.cedolareSecca ? 'text-emerald-400' : 'text-slate-600'}`} />
+                                <div className="flex-1">
+                                    <p className="text-sm font-black text-white uppercase tracking-tighter">Cedolare Secca</p>
+                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest italic">Opzione fiscale locatore</p>
+                                </div>
+                                <div className={`w-12 h-6 rounded-full relative transition-all ${formData.cedolareSecca ? 'bg-emerald-500' : 'bg-slate-800'}`}>
+                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.cedolareSecca ? 'left-7' : 'left-1'}`}></div>
+                                </div>
+                             </div>
+                          )}
                       </div>
                   </div>
                 )}

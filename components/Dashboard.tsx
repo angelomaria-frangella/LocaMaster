@@ -3,7 +3,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { Contract, DeadlineEvent, UrgencyLevel } from '../types';
 import { 
   Plus, TrendingUp, AlertCircle, Calendar, ShieldCheck, Activity, FileText, Sparkles, Target, Zap, 
-  ArrowUpRight, Landmark, Clock, MapPin, User
+  ArrowUpRight, Landmark, Clock, MapPin, User, UserCheck, Building2
 } from 'lucide-react';
 import ReportGenerator from './ReportGenerator';
 import { generatePortfolioInsights } from '../services/geminiService';
@@ -36,7 +36,12 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
     const totalRevenue = activeContracts.reduce((sum, c) => sum + (Number(c.annualRent) || 0), 0);
     const criticalDeadlines = deadlines.filter(d => d.urgency === UrgencyLevel.CRITICAL || d.urgency === UrgencyLevel.HIGH).length;
     const cedolareCount = activeContracts.filter(c => isCedolareActive(c.cedolareSecca)).length;
-    return { totalRevenue, activeCount: activeContracts.length, criticalDeadlines, cedolareCount };
+    
+    // Conteggio per lato assistito
+    const locatoriAssistiti = activeContracts.filter(c => c.clientSide === 'LOCATORE').length;
+    const conduttoriAssistiti = activeContracts.filter(c => c.clientSide === 'CONDUTTORE').length;
+
+    return { totalRevenue, activeCount: activeContracts.length, criticalDeadlines, cedolareCount, locatoriAssistiti, conduttoriAssistiti };
   }, [contracts, deadlines]);
 
   return (
@@ -55,7 +60,7 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
                  <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 rounded-md text-[10px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(16,185,129,0.3)]">
                     <Activity className="w-3.5 h-3.5 animate-pulse" /> MONITORAGGIO ATTIVO
                  </div>
-                 <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">STUDIO COMMERCIALISTA V7.1</span>
+                 <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">STUDIO COMMERCIALISTA V7.2</span>
               </div>
            </div>
            <div className="flex gap-4">
@@ -85,7 +90,21 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
 
       {/* STRUMENTAZIONE HUD */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <HudMetric label="Clienti Assistiti" value={stats.activeCount} icon={ShieldCheck} />
+        <div className="p-8 hud-border rounded-3xl group hover:border-primary-500/60 transition-all">
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Clienti Assistiti</p>
+            <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                    <span className="text-3xl font-black text-white">{stats.activeCount}</span>
+                    <div className="flex gap-2 mt-1">
+                        <span className="text-[8px] font-bold text-primary-400 flex items-center gap-1"><Building2 className="w-2 h-2"/> {stats.locatoriAssistiti} L</span>
+                        <span className="text-[8px] font-bold text-indigo-400 flex items-center gap-1"><UserCheck className="w-2 h-2"/> {stats.conduttoriAssistiti} C</span>
+                    </div>
+                </div>
+                <div className="p-4 bg-slate-950 rounded-2xl border border-white/5 text-primary-500">
+                    <ShieldCheck className="w-6 h-6" />
+                </div>
+            </div>
+        </div>
         <HudMetric label="In Cedolare Secca" value={stats.cedolareCount} icon={Sparkles} color="text-emerald-400" />
         <HudMetric label="Radar Adempimenti" value={deadlines.length} icon={Calendar} />
         <HudMetric label="Alert Critici" value={stats.criticalDeadlines} icon={AlertCircle} isWarning={stats.criticalDeadlines > 0} />
@@ -97,7 +116,7 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-500/5 blur-[150px] rounded-full -z-10 animate-pulse"></div>
             <div className="flex items-center justify-between mb-10">
                 <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-4">
-                    <Sparkles className="w-8 h-8 text-primary-500" /> Intelligence Tributaria
+                    <Sparkles className="w-8 h-8 text-primary-500" /> Intelligence Tributaria Adattiva
                 </h3>
             </div>
             <div className="space-y-6">
@@ -118,7 +137,7 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
               ) : (
                 <div className="py-24 text-center border-4 border-dashed border-slate-800 rounded-[3rem]">
                     <Activity className="w-12 h-12 text-slate-800 mx-auto mb-4 animate-pulse" />
-                    <p className="text-slate-600 italic font-black uppercase tracking-[0.4em] text-xs">Sistema Pronto.</p>
+                    <p className="text-slate-600 italic font-black uppercase tracking-[0.4em] text-xs">Radar Strategico Online.</p>
                 </div>
               )}
             </div>
@@ -138,15 +157,16 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
                     <Clock className="w-3 h-3 text-slate-500" />
                     <span className="text-[11px] font-black text-primary-500 uppercase tracking-widest">{d.date}</span>
                   </div>
-                  {d.type.includes('Registro') && !d.description.includes('ESENTE') && (
-                      <span className="text-[8px] bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded font-black uppercase">IMPOSTA DOVUTA</span>
-                  )}
+                  <span className={`text-[8px] px-1.5 py-0.5 rounded font-black uppercase ${d.clientSide === 'LOCATORE' ? 'bg-primary-500/20 text-primary-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
+                    ASSISTITO: {d.clientSide}
+                  </span>
                 </div>
                 <h4 className="font-black text-slate-100 group-hover:text-primary-400 transition-colors uppercase text-xs tracking-wider mb-2">{d.type}</h4>
                 <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
                     <User className="w-3 h-3 text-primary-500" />
-                    <span className="truncate">Cliente: {d.ownerName || d.tenantName}</span>
+                    <span className="truncate">Soggetto: {d.clientSide === 'LOCATORE' ? d.ownerName : d.tenantName}</span>
                 </div>
+                <p className="text-[10px] text-slate-500 italic mt-2 line-clamp-2 leading-relaxed">{d.description}</p>
               </div>
             )) : (
               <div className="flex-1 flex flex-col items-center justify-center text-slate-700 opacity-20 italic font-black uppercase text-xs tracking-[0.3em]">
