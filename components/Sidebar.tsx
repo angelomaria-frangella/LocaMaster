@@ -19,9 +19,9 @@ export default function Sidebar({ currentView, setCurrentView, onLogout }: Sideb
   return (
     <aside className="h-full w-24 lg:w-72 bg-black border-r border-white/5 flex flex-col shadow-2xl relative z-50">
       <div className="p-8">
-        <div className="w-14 h-14 bg-primary-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-2xl shadow-primary-600/40 mb-10 mx-auto lg:mx-0 transition-all hover:rotate-6 hover:scale-110">T</div>
+        <div className="w-14 h-14 bg-primary-600 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-2xl shadow-primary-600/40 mb-10 mx-auto lg:mx-0 transition-all hover:rotate-6 hover:scale-110">L</div>
         <div className="hidden lg:block">
-            <h1 className="font-black text-2xl tracking-tighter text-white uppercase italic">Titan<span className="text-primary-500">_</span></h1>
+            <h1 className="font-black text-2xl tracking-tighter text-white uppercase italic">LocaMaster <span className="text-primary-500">AI</span></h1>
             <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] mt-1">HUB DI GESTIONE FISCALE</p>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { Contract, DeadlineEvent, UrgencyLevel } from '../types';
 import { 
   Plus, TrendingUp, AlertCircle, Calendar, ShieldCheck, Activity, FileText, Sparkles, Target, Zap, 
-  ArrowUpRight, Landmark, Clock, MapPin
+  ArrowUpRight, Landmark, Clock, MapPin, User
 } from 'lucide-react';
 import ReportGenerator from './ReportGenerator';
 import { generatePortfolioInsights } from '../services/geminiService';
@@ -43,19 +43,19 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
     <div className="space-y-8 pb-20 perspective-hud">
       {isReportModalOpen && <ReportGenerator contracts={contracts} onClose={() => setIsReportModalOpen(false)} aiEnabled={aiEnabled} />}
 
-      {/* TITAN HUD HEADER */}
+      {/* LOCAMASTER AI HUD HEADER */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 rotate-hud">
         <div className="lg:col-span-2 p-10 hud-border rounded-3xl flex flex-col md:flex-row justify-between items-center gap-8 overflow-hidden">
            <div className="relative">
               <div className="absolute -left-10 top-0 w-1 h-20 bg-primary-500 shadow-[0_0_20px_#3b82f6]"></div>
               <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase font-display glow-text leading-none">
-                TITAN <span className="text-primary-500">_STUDIO</span>
+                LocaMaster <span className="text-primary-500">AI</span>
               </h1>
               <div className="flex items-center gap-4 mt-4">
-                 <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 rounded-md text-[10px] font-black uppercase tracking-widest">
-                    <Activity className="w-3.5 h-3.5 animate-pulse" /> TELEMETRIA FISCALE
+                 <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 rounded-md text-[10px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+                    <Activity className="w-3.5 h-3.5 animate-pulse" /> MONITORAGGIO ATTIVO
                  </div>
-                 <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">STUDIO COMMERCIALE V5.2</span>
+                 <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">STUDIO COMMERCIALISTA V7.1</span>
               </div>
            </div>
            <div className="flex gap-4">
@@ -63,7 +63,7 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
                  <FileText className="w-5 h-5 text-primary-400" /> REPORT FISCALE
               </button>
               <button onClick={onAddContract} className="px-10 py-5 bg-primary-600 hover:bg-primary-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] shadow-2xl shadow-primary-600/40 transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
-                 <Plus className="w-6 h-6" /> NUOVO ASSET
+                 <Plus className="w-6 h-6" /> NUOVA PRATICA
               </button>
            </div>
         </div>
@@ -78,21 +78,20 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
                 <span className="text-primary-500 font-black text-3xl uppercase italic tracking-tighter">k</span>
             </div>
             <div className="mt-4 flex items-center gap-2 text-[10px] font-black text-emerald-400 uppercase tracking-widest">
-                <TrendingUp className="w-3.5 h-3.5" /> +4.2% VS TRIMESTRE PRECEDENTE
+                <TrendingUp className="w-3.5 h-3.5" /> PERFORMANCE PORTFOLIO
             </div>
         </div>
       </div>
 
       {/* STRUMENTAZIONE HUD */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <HudMetric label="Asset Attivi" value={stats.activeCount} icon={ShieldCheck} />
-        <HudMetric label="Regime Cedolare" value={`${Math.round((stats.cedolareCount/stats.activeCount)*100 || 0)}%`} icon={Sparkles} color="text-emerald-400" />
-        <HudMetric label="Radar Scadenze" value={deadlines.length} icon={Calendar} />
+        <HudMetric label="Clienti Assistiti" value={stats.activeCount} icon={ShieldCheck} />
+        <HudMetric label="In Cedolare Secca" value={stats.cedolareCount} icon={Sparkles} color="text-emerald-400" />
+        <HudMetric label="Radar Adempimenti" value={deadlines.length} icon={Calendar} />
         <HudMetric label="Alert Critici" value={stats.criticalDeadlines} icon={AlertCircle} isWarning={stats.criticalDeadlines > 0} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        {/* INTELLIGENCE STATION */}
         <div className="xl:col-span-2 space-y-6">
           <div className="p-10 hud-border rounded-[2.5rem] relative overflow-hidden group min-h-[500px]">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-500/5 blur-[150px] rounded-full -z-10 animate-pulse"></div>
@@ -100,14 +99,7 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
                 <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-4">
                     <Sparkles className="w-8 h-8 text-primary-500" /> Intelligence Tributaria
                 </h3>
-                <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Deep Scan</span>
-                    <div className="h-1.5 w-32 bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary-500 animate-[progress_3s_infinite]"></div>
-                    </div>
-                </div>
             </div>
-            
             <div className="space-y-6">
               {isInsightsLoading ? (
                 [1,2,3].map(i => <div key={i} className="h-32 bg-white/5 rounded-[2rem] animate-pulse border border-white/5"></div>)
@@ -121,20 +113,18 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
                       <p className={`text-[11px] font-black uppercase tracking-[0.3em] mb-3 ${insight.text.includes('CARENZA') || insight.text.includes('ERRORE') || insight.text.includes('RISCHIO') ? 'text-rose-400' : 'text-primary-500'}`}>{insight.category}</p>
                       <p className="text-slate-100 font-bold text-xl leading-snug tracking-tight">{insight.text}</p>
                     </div>
-                    <ArrowUpRight className="w-6 h-6 text-slate-700 group-hover:text-primary-500 transition-colors" />
                   </div>
                 ))
               ) : (
                 <div className="py-24 text-center border-4 border-dashed border-slate-800 rounded-[3rem]">
                     <Activity className="w-12 h-12 text-slate-800 mx-auto mb-4 animate-pulse" />
-                    <p className="text-slate-600 italic font-black uppercase tracking-[0.4em] text-xs">Analisi tributaria in corso... Scansione RLI attiva.</p>
+                    <p className="text-slate-600 italic font-black uppercase tracking-[0.4em] text-xs">Sistema Pronto.</p>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* FEED TELEMETRIA REAL-TIME */}
         <div className="p-10 hud-border rounded-[2.5rem] bg-slate-900/20 flex flex-col">
           <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-10 flex items-center justify-between">
             Radar Scadenze <span className="w-3 h-3 bg-primary-500 rounded-full animate-ping"></span>
@@ -148,19 +138,19 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, deadlines, onAddContra
                     <Clock className="w-3 h-3 text-slate-500" />
                     <span className="text-[11px] font-black text-primary-500 uppercase tracking-widest">{d.date}</span>
                   </div>
-                  <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${d.urgency === 'critical' ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-500'}`}>
-                    {d.urgency}
-                  </div>
+                  {d.type.includes('Registro') && !d.description.includes('ESENTE') && (
+                      <span className="text-[8px] bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded font-black uppercase">IMPOSTA DOVUTA</span>
+                  )}
                 </div>
                 <h4 className="font-black text-slate-100 group-hover:text-primary-400 transition-colors uppercase text-xs tracking-wider mb-2">{d.type}</h4>
-                <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
-                    <MapPin className="w-3 h-3" />
-                    <span className="truncate">{d.contractAddress}</span>
+                <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
+                    <User className="w-3 h-3 text-primary-500" />
+                    <span className="truncate">Cliente: {d.ownerName || d.tenantName}</span>
                 </div>
               </div>
             )) : (
               <div className="flex-1 flex flex-col items-center justify-center text-slate-700 opacity-20 italic font-black uppercase text-xs tracking-[0.3em]">
-                Nessun adempimento rilevato
+                Nessun adempimento imminente
               </div>
             )}
           </div>

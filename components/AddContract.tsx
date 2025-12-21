@@ -124,7 +124,7 @@ const AddContract: React.FC<AddContractProps> = ({ initialData, onConfirmSave, o
                   <FileDigit className="w-16 h-16 text-primary-500 relative z-10" />
                </div>
                <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">Ingresso Pratica</h3>
-               <p className="text-slate-500 mb-10 text-center max-w-md font-bold uppercase text-[10px] tracking-[0.3em]">Studio Commercialista - Titan V6</p>
+               <p className="text-slate-500 mb-10 text-center max-w-md font-bold uppercase text-[10px] tracking-[0.3em]">Studio Commercialista - LocaMaster AI</p>
                <label className="cursor-pointer px-16 py-6 bg-primary-600 hover:bg-primary-500 text-white rounded-2xl font-black uppercase tracking-[0.2em] transition-all shadow-2xl hover:scale-105">
                  Analizza Contratto
                  <input type="file" className="hidden" accept=".pdf,image/*" onChange={(e) => e.target.files?.[0] && processFile(e.target.files[0])} />
