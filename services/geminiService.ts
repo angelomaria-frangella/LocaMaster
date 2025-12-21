@@ -9,44 +9,27 @@ export const extractContractData = async (base64Data: string, mimeType: string):
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
-            model: MODEL_FLASH,
+            model: MODEL_PRO,
             config: {
-                systemInstruction: `Agisci come Lia, l'AI senior di uno Studio Commercialista italiano esperta in RLI e contrattualistica.
-                Il tuo compito è l'estrazione TECNICA e FISCALE chirurgica. 
-                REGOLE TASSATIVE:
-                1. PARTI: Estrai TUTTI i Locatori e TUTTI i Conduttori con Nome, Codice Fiscale e Indirizzo.
-                2. IMMOBILE: Estrai Indirizzo e IDENTIFICATIVI CATASTALI (Foglio, Particella/Mappale, Subalterno, Categoria).
-                3. CANONE CONCORDATO: Verifica se il contratto cita la L. 431/98 art. 2 c. 3 o accordi territoriali. Se sì, isCanoneConcordato deve essere TRUE.
-                4. FISCO: Identifica Cedolare Secca e imposte di registro.
-                5. DATE: Estrai Stipula e Decorrenza (Inizio).
-                6. PREAVVISO: Cerca i mesi di preavviso per la disdetta (solitamente 6, ma verifica se 3 o altro).
-                Restituisci esclusivamente un JSON puro.`,
+                systemInstruction: `Sei Lia, l'AI esperta di legislazione immobiliare italiana (RLI, L.431/98).
+                DEVI ESTRARRE CHIRURGICAMENTE:
+                1. PARTI: Locatori (proprietari) e Conduttori (inquilini) con Nome e Codice Fiscale.
+                2. IMMOBILE: Indirizzo e DATI CATASTALI (Foglio, Particella/Mappale, Subalterno). Cerca i numeri nelle tabelle.
+                3. ECONOMICO: Canone Annuo, Deposito Cauzionale.
+                4. FISCO: Se presente "Cedolare Secca" o "Canone Concordato" (Accordi Territoriali).
+                5. DATE: Stipula (firma) e Decorrenza (inizio).
+                6. DISDETTA: Mesi di preavviso per recesso (solitamente 6).
+                
+                REGOLE DI OUTPUT:
+                - Restituisci SOLO un oggetto JSON.
+                - NESSUN testo prima o dopo.
+                - Se un dato non c'è, usa stringa vuota o zero.`,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
-                        owners: { 
-                            type: Type.ARRAY, 
-                            items: { 
-                                type: Type.OBJECT, 
-                                properties: { 
-                                    name: { type: Type.STRING }, 
-                                    taxCode: { type: Type.STRING },
-                                    address: { type: Type.STRING }
-                                } 
-                            } 
-                        },
-                        tenants: { 
-                            type: Type.ARRAY, 
-                            items: { 
-                                type: Type.OBJECT, 
-                                properties: { 
-                                    name: { type: Type.STRING }, 
-                                    taxCode: { type: Type.STRING },
-                                    address: { type: Type.STRING }
-                                } 
-                            } 
-                        },
+                        owners: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING } } } },
+                        tenants: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING } } } },
                         propertyAddress: { type: Type.STRING },
                         cadastral: {
                             type: Type.OBJECT,
@@ -66,20 +49,20 @@ export const extractContractData = async (base64Data: string, mimeType: string):
                         cedolareSecca: { type: Type.BOOLEAN },
                         isCanoneConcordato: { type: Type.BOOLEAN },
                         noticeMonthsOwner: { type: Type.NUMBER },
-                        noticeMonthsTenant: { type: Type.NUMBER },
-                        usageType: { type: Type.STRING }
+                        noticeMonthsTenant: { type: Type.NUMBER }
                     },
-                    required: ["startDate", "propertyAddress"]
+                    required: ["propertyAddress", "startDate"]
                 }
             },
-            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Analisi tecnica contratto per fini fiscali e registrazione RLI." }] }]
+            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Analizza questo contratto e compila il database fiscale." }] }]
         });
         
-        let text = response.text || "{}";
-        text = text.replace(/```json/g, "").replace(/```/g, "").trim();
-        return JSON.parse(text);
+        let rawText = response.text || "{}";
+        // Pulisci eventuale sporcizia nel testo se il modello non rispetta il mimeType
+        const cleanedText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+        return JSON.parse(cleanedText);
     } catch (e) {
-        console.error("Lia Extraction Error:", e);
+        console.error("Lia Critical Failure:", e);
         return {};
     }
 };
@@ -88,11 +71,8 @@ export const generateFiscalReport = async (contracts: Contract[], type: string, 
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const prompt = type === 'MAIL_ADVISORY' 
-            ? `Genera un'email professionale per lo studio ${studioSettings?.name || 'Commercialista'}. 
-               Cliente: ${subjectName}. Scadenza: ${selectedDeadline?.type}. Data: ${selectedDeadline?.date}. 
-               Immobile: ${selectedDeadline?.contractAddress}.
-               Usa un tono autorevole. Restituisci JSON con "subject" e "body" (HTML).`
-            : `Genera report HTML professionale. Contratti: ${JSON.stringify(contracts)}. Usa Tailwind CSS inline. Includi dettagli catastali e fiscali.`;
+            ? `Scrivi un'email per lo studio ${studioSettings.name} rivolta a ${subjectName}. Scadenza ${selectedDeadline?.type} il ${selectedDeadline?.date}. Oggetto: Avviso Scadenza.`
+            : `Genera un report HTML per ${subjectName}. Portfolio: ${JSON.stringify(contracts)}.`;
 
         const response = await ai.models.generateContent({
             model: MODEL_PRO,
@@ -104,11 +84,11 @@ export const generateFiscalReport = async (contracts: Contract[], type: string, 
 
         if (type === 'MAIL_ADVISORY') {
             const data = JSON.parse(response.text?.replace(/```json/g, "").replace(/```/g, "").trim() || "{}");
-            return { html: data.body || "", subject: data.subject || "Avviso Scadenza Studio" };
+            return { html: data.body || "", subject: data.subject || "Avviso Scadenza" };
         }
-        return { html: response.text || "", subject: `Report Fiscale - ${subjectName}` };
+        return { html: response.text || "", subject: `Report - ${subjectName}` };
     } catch (e) {
-        return { html: "Errore generazione report.", subject: "Errore" };
+        return { html: "Errore.", subject: "Errore" };
     }
 };
 
@@ -118,9 +98,7 @@ export const analyzeLeaseStrategy = async (userMsg: string, contracts: Contract[
         model: MODEL_PRO,
         contents: [...history.map(m => ({role: m.role === 'ai' ? 'model' : 'user', parts: [{text: m.content}]})), {role: 'user', parts: [{text: userMsg}]}],
         config: { 
-            systemInstruction: `Sei Lia. Esperta di L. 431/98 e L. 392/78. 
-            Rispondi come un consulente senior dello studio commercialista. 
-            Analizza scadenze, dati catastali e calcoli fiscali con precisione assoluta.` 
+            systemInstruction: "Sei Lia. Consulente legale e fiscale senior. Rispondi con precisione e riferimenti normativi." 
         }
     });
     return response.text || "";
@@ -132,7 +110,7 @@ export const generatePortfolioInsights = async (contracts: Contract[]): Promise<
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
-            contents: `Analizza portfolio: ${JSON.stringify(contracts)}. Identifica rischi di morosità, scadenze disdetta e opportunità fiscali (es. passaggio a concordato).`,
+            contents: `Analizza questi contratti: ${JSON.stringify(contracts)}.`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {

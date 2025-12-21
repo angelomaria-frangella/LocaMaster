@@ -17,7 +17,7 @@ const supabase = isSupabaseConfigured()
 export const normalizeContract = (data: any): Contract => {
     if (!data) return {} as Contract;
 
-    // Normalizzazione profonda per non perdere i dati estratti da Lia
+    // Normalizzazione profonda per non perdere i dati vitali estratti da Lia
     return {
         ...data,
         id: data.id || Math.random().toString(36).substr(2, 9),
