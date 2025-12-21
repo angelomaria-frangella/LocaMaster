@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Contract } from "../types";
+import { Contract, ContractType } from "../types";
 
 const MODEL_FLASH = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
@@ -11,25 +11,35 @@ export const extractContractData = async (base64Data: string, mimeType: string):
         const response = await ai.models.generateContent({
             model: MODEL_PRO,
             config: {
-                systemInstruction: `Sei Lia, l'AI esperta di legislazione immobiliare italiana (RLI, L.431/98).
-                DEVI ESTRARRE CHIRURGICAMENTE:
-                1. PARTI: Locatori (proprietari) e Conduttori (inquilini) con Nome e Codice Fiscale.
-                2. IMMOBILE: Indirizzo e DATI CATASTALI (Foglio, Particella/Mappale, Subalterno). Cerca i numeri nelle tabelle.
-                3. ECONOMICO: Canone Annuo, Deposito Cauzionale.
-                4. FISCO: Se presente "Cedolare Secca" o "Canone Concordato" (Accordi Territoriali).
-                5. DATE: Stipula (firma) e Decorrenza (inizio).
-                6. DISDETTA: Mesi di preavviso per recesso (solitamente 6).
+                systemInstruction: `Agisci come Lia, l'AI Senior di uno Studio Commercialista italiano esperta in contratti di locazione (RLI, L.431/98).
                 
-                REGOLE DI OUTPUT:
-                - Restituisci SOLO un oggetto JSON.
-                - NESSUN testo prima o dopo.
-                - Se un dato non c'è, usa stringa vuota o zero.`,
+                PROTOCOLLO DI ESTRAZIONE TASSATIVO:
+                1. PARTI: Estrai TUTTI i Locatori (Proprietari) e Conduttori (Inquilini). Per ognuno: Nome/Ragione Sociale e Codice Fiscale.
+                2. IMMOBILE: Indirizzo completo e DATI CATASTALI IDENTIFICATIVI (Foglio, Particella/Mappale, Subalterno, Categoria, Rendita).
+                3. CANONE CONCORDATO: Se il testo cita "Accordo Territoriale del Comune di...", "L. 431/98 art. 2 comma 3", o "3+2 anni", imposta isCanoneConcordato: true.
+                4. FISCO: Cerca "Cedolare Secca". Se citata come opzione esercitata, cedolareSecca: true.
+                5. ECONOMICO: Canone Annuo (somma delle rate), Deposito Cauzionale.
+                6. DISDETTA: Trova i mesi di preavviso per il recesso (es. "6 mesi", "3 mesi").
+                
+                Restituisci esclusivamente un oggetto JSON pulito.`,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
-                        owners: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING } } } },
-                        tenants: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING } } } },
+                        owners: { 
+                            type: Type.ARRAY, 
+                            items: { 
+                                type: Type.OBJECT, 
+                                properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING } } 
+                            } 
+                        },
+                        tenants: { 
+                            type: Type.ARRAY, 
+                            items: { 
+                                type: Type.OBJECT, 
+                                properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING } } 
+                            } 
+                        },
                         propertyAddress: { type: Type.STRING },
                         cadastral: {
                             type: Type.OBJECT,
@@ -54,15 +64,14 @@ export const extractContractData = async (base64Data: string, mimeType: string):
                     required: ["propertyAddress", "startDate"]
                 }
             },
-            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Analizza questo contratto e compila il database fiscale." }] }]
+            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Esegui analisi catastale e fiscale integrale." }] }]
         });
         
-        let rawText = response.text || "{}";
-        // Pulisci eventuale sporcizia nel testo se il modello non rispetta il mimeType
+        const rawText = response.text || "{}";
         const cleanedText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
         return JSON.parse(cleanedText);
     } catch (e) {
-        console.error("Lia Critical Failure:", e);
+        console.error("Lia Extraction Critical Error:", e);
         return {};
     }
 };
@@ -71,8 +80,8 @@ export const generateFiscalReport = async (contracts: Contract[], type: string, 
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const prompt = type === 'MAIL_ADVISORY' 
-            ? `Scrivi un'email per lo studio ${studioSettings.name} rivolta a ${subjectName}. Scadenza ${selectedDeadline?.type} il ${selectedDeadline?.date}. Oggetto: Avviso Scadenza.`
-            : `Genera un report HTML per ${subjectName}. Portfolio: ${JSON.stringify(contracts)}.`;
+            ? `Genera email formale di avviso scadenza per ${subjectName}. Studio: ${studioSettings.name}. Scadenza: ${selectedDeadline?.type} al ${selectedDeadline?.date}. Immobile: ${selectedDeadline?.contractAddress}.`
+            : `Genera report fiscale HTML per ${subjectName}. Portfolio: ${JSON.stringify(contracts)}. Usa stile professionale Tailwind.`;
 
         const response = await ai.models.generateContent({
             model: MODEL_PRO,
@@ -84,11 +93,11 @@ export const generateFiscalReport = async (contracts: Contract[], type: string, 
 
         if (type === 'MAIL_ADVISORY') {
             const data = JSON.parse(response.text?.replace(/```json/g, "").replace(/```/g, "").trim() || "{}");
-            return { html: data.body || "", subject: data.subject || "Avviso Scadenza" };
+            return { html: data.body || "", subject: data.subject || "Avviso Scadenza Locazione" };
         }
-        return { html: response.text || "", subject: `Report - ${subjectName}` };
+        return { html: response.text || "", subject: `Report Fiscale - ${subjectName}` };
     } catch (e) {
-        return { html: "Errore.", subject: "Errore" };
+        return { html: "Errore generazione report.", subject: "Errore" };
     }
 };
 
@@ -98,7 +107,7 @@ export const analyzeLeaseStrategy = async (userMsg: string, contracts: Contract[
         model: MODEL_PRO,
         contents: [...history.map(m => ({role: m.role === 'ai' ? 'model' : 'user', parts: [{text: m.content}]})), {role: 'user', parts: [{text: userMsg}]}],
         config: { 
-            systemInstruction: "Sei Lia. Consulente legale e fiscale senior. Rispondi con precisione e riferimenti normativi." 
+            systemInstruction: "Sei Lia. Consulente senior immobiliare. Rispondi citando se necessario L. 431/98 e DPR 131/86." 
         }
     });
     return response.text || "";
@@ -110,7 +119,7 @@ export const generatePortfolioInsights = async (contracts: Contract[]): Promise<
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
-            contents: `Analizza questi contratti: ${JSON.stringify(contracts)}.`,
+            contents: `Analizza anomalie e opportunità in questi contratti: ${JSON.stringify(contracts)}.`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
