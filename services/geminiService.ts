@@ -11,35 +11,69 @@ export const extractContractData = async (base64Data: string, mimeType: string):
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
             config: {
-                systemInstruction: `Agisci come Lia, l'AI di Studio Commercialista specializzata in RLI. 
-                Focus assoluto su DATE di decorrenza, stipula e termini di disdetta. 
-                Restituisci SOLO JSON.`,
+                systemInstruction: `Agisci come Lia, l'AI senior di Studio Commercialista. 
+                Il tuo compito è estrarre date e dati fiscali da contratti RLI.
+                Focus: Decorrenza, Stipula, Canone, Cedolare.
+                REGOLE: Restituisci SOLO un oggetto JSON. Se un dato è incerto, usa null. 
+                NON aggiungere testo prima o dopo il JSON.`,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
-                        owners: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING }, address: { type: Type.STRING } } } },
-                        tenants: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING }, address: { type: Type.STRING } } } },
+                        owners: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING } } } },
+                        tenants: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING } } } },
                         propertyAddress: { type: Type.STRING },
-                        usageType: { type: Type.STRING },
                         annualRent: { type: Type.NUMBER },
-                        deposit: { type: Type.NUMBER },
-                        isCanoneConcordato: { type: Type.BOOLEAN },
-                        cedolareSecca: { type: Type.BOOLEAN },
                         contractType: { type: Type.STRING },
                         startDate: { type: Type.STRING },
                         stipulationDate: { type: Type.STRING },
-                        cadastral: { type: Type.OBJECT, properties: { foglio: { type: Type.STRING }, particella: { type: Type.STRING }, subalterno: { type: Type.STRING }, categoria: { type: Type.STRING }, rendita: { type: Type.NUMBER } } }
+                        cedolareSecca: { type: Type.BOOLEAN },
+                        isCanoneConcordato: { type: Type.BOOLEAN },
+                        noticeMonthsOwner: { type: Type.NUMBER },
+                        noticeMonthsTenant: { type: Type.NUMBER }
                     },
-                    required: ["owners", "tenants", "startDate", "stipulationDate"]
+                    required: ["startDate"]
                 }
             },
-            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Esegui analisi tecnica fiscale." }] }]
+            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Estrai parametri contrattuali." }] }]
         });
-        return JSON.parse(response.text || "{}");
+        
+        let text = response.text || "{}";
+        // Pulizia forzata per evitare errori di parsing
+        text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+        return JSON.parse(text);
     } catch (e) {
-        console.error("Errore IA Studio:", e);
+        console.error("Lia Estrazione Error:", e);
         return {};
+    }
+};
+
+export const generateFiscalReport = async (contracts: Contract[], type: string, subjectName: string, studioSettings: any, selectedDeadline?: any): Promise<{html: string, subject: string}> => {
+    try {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const prompt = type === 'MAIL_ADVISORY' 
+            ? `Genera un'email professionale per lo studio ${studioSettings?.name || 'Commercialista'}. 
+               Cliente: ${subjectName}. Scadenza: ${selectedDeadline?.type}. Data: ${selectedDeadline?.date}. 
+               Immobile: ${selectedDeadline?.contractAddress}.
+               Scrivi un oggetto efficace e un corpo HTML formattato. Restituisci JSON con chiavi "subject" e "body".`
+            : `Genera un report fiscale HTML professionale per ${subjectName}. Contratti: ${JSON.stringify(contracts)}. 
+               Focus su scadenze RLI e termini disdetta. Usa Tailwind CSS inline.`;
+
+        const response = await ai.models.generateContent({
+            model: MODEL_PRO,
+            contents: prompt,
+            config: { 
+                responseMimeType: type === 'MAIL_ADVISORY' ? "application/json" : "text/plain"
+            }
+        });
+
+        if (type === 'MAIL_ADVISORY') {
+            const data = JSON.parse(response.text?.replace(/```json/g, "").replace(/```/g, "").trim() || "{}");
+            return { html: data.body || "", subject: data.subject || "Avviso Scadenza" };
+        }
+        return { html: response.text || "", subject: `Report Studio - ${subjectName}` };
+    } catch (e) {
+        return { html: "Errore generazione report.", subject: "Errore" };
     }
 };
 
@@ -49,16 +83,16 @@ export const generatePortfolioInsights = async (contracts: Contract[]): Promise<
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
-            contents: `Analizza questo portfolio per conto dello Studio Commercialista: ${JSON.stringify(contracts)}. Segnala scadenze imminenti e ottimizzazioni fiscali.`,
+            contents: `Analizza portfolio: ${JSON.stringify(contracts)}. Segnala scadenze disdetta entro 6 mesi.`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.ARRAY,
-                    items: { type: Type.OBJECT, properties: { category: { type: Type.STRING }, text: { type: Type.STRING } }, required: ["category", "text"] }
+                    items: { type: Type.OBJECT, properties: { category: { type: Type.STRING }, text: { type: Type.STRING } } }
                 }
             }
         });
-        return JSON.parse(response.text || "[]");
+        return JSON.parse(response.text?.replace(/```json/g, "").replace(/```/g, "").trim() || "[]");
     } catch (e) { return []; }
 };
 
@@ -68,28 +102,9 @@ export const analyzeLeaseStrategy = async (userMsg: string, contracts: Contract[
         model: MODEL_PRO,
         contents: [...history.map(m => ({role: m.role === 'ai' ? 'model' : 'user', parts: [{text: m.content}]})), {role: 'user', parts: [{text: userMsg}]}],
         config: { 
-            systemInstruction: `Sei Lia, assistente senior di Studio Commercialista. 
-            Le DATE sono il tuo chiodo fisso. Non dare mai consigli senza aver verificato stipula e decorrenza.
-            Usa un tono professionale, asciutto e autorevole.` 
+            systemInstruction: `Sei Lia. Le DATE sono la tua vita. Se non hai date certe, segnalalo. 
+            Fornisci calcoli esatti e bozze di lettere legali.` 
         }
     });
     return response.text || "";
-};
-
-/**
- * GENERATORE REPORT FISCALE REALE
- */
-export const generateFiscalReport = async (contracts: Contract[], type: string, subjectName: string, studioSettings: any): Promise<string> => {
-    try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const response = await ai.models.generateContent({
-            model: MODEL_PRO,
-            contents: `Genera un report fiscale HTML dettagliato per il cliente "${subjectName}". Dati: ${JSON.stringify(contracts)}. 
-            Lo studio è: ${JSON.stringify(studioSettings)}. 
-            Includi tabelle per scadenze, imposte dovute e analisi cedolare secca. Usa Tailwind CSS inline se necessario.`
-        });
-        return response.text || "Impossibile generare il report.";
-    } catch (e) {
-        return "Errore durante la generazione del report IA.";
-    }
 };
