@@ -54,7 +54,7 @@ export interface Party {
   id: string;
   name: string;
   taxCode?: string;
-  address?: string;
+  address?: string; // Residenza o Sede Legale
   email?: string;
 }
 
@@ -73,11 +73,6 @@ export interface Contract {
   
   tenantName: string; 
   tenants: Party[];   
-
-  ownerTaxCode?: string; 
-  ownerAddress?: string; 
-  tenantTaxCode?: string; 
-  tenantAddress?: string; 
 
   // 2. Dati Immobile
   propertyAddress: string;
