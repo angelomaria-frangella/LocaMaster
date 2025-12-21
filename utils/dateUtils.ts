@@ -1,11 +1,12 @@
 
-import { Contract, DeadlineEvent, DeadlineType, UrgencyLevel, ClientSide } from '../types';
+import { Contract, DeadlineEvent, DeadlineType, UrgencyLevel } from '../types';
 
 export const isCedolareActive = (val: any): boolean => {
   if (val === true || val === 'true' || val === 1 || val === '1') return true;
   if (val === false || val === 'false' || val === 0 || val === '0') return false;
+  if (!val) return false;
   const s = String(val).toLowerCase().trim();
-  return ['true', '1', 'yes', 'si', 'cedolare'].includes(s);
+  return ['true', '1', 'yes', 'si', 'cedolare', 'attiva'].includes(s);
 };
 
 const addYears = (date: Date, years: number): Date => {
@@ -41,12 +42,12 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
     
     let duration = 4;
     const cType = (contract.contractType || '').toLowerCase();
-    if (cType.includes('3+2')) duration = 3;
-    else if (cType.includes('6+6')) duration = 6;
+    if (cType.includes('3+2') || contract.isCanoneConcordato) duration = 3;
+    else if (cType.includes('6+6') || cType.includes('commerciale')) duration = 6;
     else if (cType.includes('transitorio')) duration = 1;
 
     let exp = addYears(start, duration);
-    // Trova la prossima scadenza futura
+    // Trova la prossima scadenza futura reale
     while (exp.getTime() < todayTime && duration > 0) {
         exp = addYears(exp, duration);
     }
@@ -64,11 +65,11 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
         date: rliDate.toISOString().split('T')[0],
         type: hasCedolare ? DeadlineType.RLI_OBLIGATION : DeadlineType.REGISTRATION_TAX,
         urgency: calculateUrgency(rliDate),
-        description: hasCedolare ? "Proroga RLI (Esenzione Imposta)" : "Pagamento Imposta Registro Annuale",
+        description: hasCedolare ? "Proroga RLI (Esenzione Imposta)" : "Pagamento Imposta Registro Annualità/Proroga",
         completed: false
     });
 
-    // TERMINE DISDETTA (CRUCIALE)
+    // TERMINE DISDETTA (FONDAMENTALE PER LO STUDIO)
     const noticeMonths = contract.clientSide === 'LOCATORE' ? (contract.noticeMonthsOwner || 6) : (contract.noticeMonthsTenant || 6);
     const noticeDate = addMonths(exp, -noticeMonths);
     deadlines.push({
@@ -81,7 +82,7 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
         date: noticeDate.toISOString().split('T')[0],
         type: DeadlineType.RESOLUTION_NOTICE,
         urgency: calculateUrgency(noticeDate),
-        description: `TERMINE DISDETTA (${noticeMonths} mesi). Verificare intenzione del cliente.`,
+        description: `TERMINE DISDETTA (${noticeMonths} mesi preavviso). Se non inviata, il contratto si rinnova.`,
         completed: false
     });
 
@@ -96,7 +97,7 @@ export const generateDeadlines = (contracts: Contract[]): DeadlineEvent[] => {
         date: exp.toISOString().split('T')[0],
         type: DeadlineType.EXPIRATION,
         urgency: calculateUrgency(exp),
-        description: `Fine periodo contrattuale corrente.`,
+        description: `Fine periodo contrattuale. Necessario invio RLI.`,
         completed: false
     });
   }

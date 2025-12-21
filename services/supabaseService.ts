@@ -14,27 +14,26 @@ const supabase = isSupabaseConfigured()
   ? createClient(supabaseUrl, supabaseAnonKey) 
   : null;
 
-/**
- * NORMALIZZAZIONE DETERMINISTICA (Inbound)
- */
 export const normalizeContract = (data: any): Contract => {
     if (!data) return {} as Contract;
 
-    const rawCedolare = data.cedolare_secca !== undefined ? data.cedolare_secca : data.cedolareSecca;
-    
     return {
         ...data,
-        id: data.id,
-        isActive: data.is_active !== undefined ? data.is_active : (data.isActive !== undefined ? data.isActive : true),
-        clientSide: data.client_side || data.clientSide || 'LOCATORE',
-        ownerName: data.owner_name || data.ownerName || '',
-        tenantName: data.tenant_name || data.tenantName || '',
-        propertyAddress: data.property_address || data.propertyAddress || '',
-        annualRent: Number(data.annual_rent || data.annualRent || 0),
+        id: data.id || Math.random().toString(36).substr(2, 9),
+        isActive: data.isActive !== undefined ? data.isActive : true,
+        clientSide: data.clientSide || 'LOCATORE',
+        ownerName: data.ownerName || '',
+        tenantName: data.tenantName || '',
+        propertyAddress: data.propertyAddress || '',
+        annualRent: Number(data.annualRent || 0),
         deposit: Number(data.deposit || 0),
-        startDate: data.start_date || data.startDate || '',
-        contractType: data.contract_type || data.contractType || '',
-        cedolareSecca: isCedolareActive(rawCedolare),
+        startDate: data.startDate || '',
+        stipulationDate: data.stipulationDate || '',
+        contractType: data.contractType || '',
+        cedolareSecca: isCedolareActive(data.cedolareSecca),
+        isCanoneConcordato: data.isCanoneConcordato === true || data.isCanoneConcordato === 'true',
+        noticeMonthsOwner: Number(data.noticeMonthsOwner || 6),
+        noticeMonthsTenant: Number(data.noticeMonthsTenant || 6),
         owners: Array.isArray(data.owners) ? data.owners : [],
         tenants: Array.isArray(data.tenants) ? data.tenants : [],
         registration: data.registration || {},
@@ -49,52 +48,18 @@ export const fetchContracts = async (): Promise<Contract[]> => {
     if (error) throw error;
     return (data || []).map(normalizeContract);
   } catch (err) {
-    console.error("Fetch error:", err);
     return [];
   }
 };
 
-/**
- * SALVATAGGIO BLINDATO (Outbound)
- */
 export const createContract = async (contract: Contract): Promise<Contract | null> => {
   if (!supabase) return null;
   try {
       const normalized = normalizeContract(contract);
-      
-      const dbPayload = {
-          id: normalized.id,
-          is_active: normalized.isActive,
-          client_side: normalized.clientSide,
-          owner_name: normalized.ownerName,
-          tenant_name: normalized.tenantName,
-          property_address: normalized.propertyAddress,
-          annual_rent: normalized.annualRent,
-          deposit: normalized.deposit,
-          start_date: normalized.startDate,
-          contract_type: normalized.contractType,
-          cedolare_secca: isCedolareActive(normalized.cedolareSecca), 
-          usage_type: normalized.usageType,
-          first_expiration_date: normalized.firstExpirationDate,
-          early_termination_date: normalized.earlyTerminationDate,
-          owners: normalized.owners,
-          tenants: normalized.tenants,
-          cadastral: normalized.cadastral,
-          registration: normalized.registration,
-          drive_link: normalized.driveLink,
-          notes: normalized.notes
-      };
-
-      const { data, error } = await supabase
-        .from('contracts')
-        .upsert([dbPayload])
-        .select()
-        .single();
-
+      const { data, error } = await supabase.from('contracts').upsert([normalized]).select().single();
       if (error) throw error;
       return normalizeContract(data);
   } catch (err) {
-      console.error("Create error:", err);
       throw err;
   }
 };

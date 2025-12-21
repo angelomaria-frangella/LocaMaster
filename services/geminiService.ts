@@ -11,19 +11,53 @@ export const extractContractData = async (base64Data: string, mimeType: string):
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
             config: {
-                systemInstruction: `Agisci come Lia, l'AI senior di Studio Commercialista. 
-                Il tuo compito è estrarre date e dati fiscali da contratti RLI.
-                Focus: Decorrenza, Stipula, Canone, Cedolare.
-                REGOLE: Restituisci SOLO un oggetto JSON. Se un dato è incerto, usa null. 
-                NON aggiungere testo prima o dopo il JSON.`,
+                systemInstruction: `Agisci come Lia, l'AI senior di uno Studio Commercialista italiano. 
+                Sei un'esperta assoluta in RLI e contrattualistica. Devi estrarre TUTTI i dati con precisione chirurgica.
+                FOCUS CRITICO:
+                1. PARTI: Estrai tutti i Locatori e Conduttori con Nome, Codice Fiscale e Indirizzo.
+                2. IMMOBILE: Indirizzo completo e DATI CATASTALI (Foglio, Particella, Subalterno).
+                3. FISCO: Verifica se è 'Canone Concordato' (L. 431/98 art. 2 c. 3) e se c'è l'opzione 'Cedolare Secca'.
+                4. ECONOMICO: Canone annuo e Deposito cauzionale.
+                5. TEMPI: Data stipula, Data decorrenza e i MESI DI PREAVVISO per la disdetta (cerca clausole come '6 mesi', '3 mesi').
+                Restituisci SOLO JSON puro.`,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
-                        owners: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING } } } },
-                        tenants: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, taxCode: { type: Type.STRING } } } },
+                        owners: { 
+                            type: Type.ARRAY, 
+                            items: { 
+                                type: Type.OBJECT, 
+                                properties: { 
+                                    name: { type: Type.STRING }, 
+                                    taxCode: { type: Type.STRING },
+                                    address: { type: Type.STRING }
+                                } 
+                            } 
+                        },
+                        tenants: { 
+                            type: Type.ARRAY, 
+                            items: { 
+                                type: Type.OBJECT, 
+                                properties: { 
+                                    name: { type: Type.STRING }, 
+                                    taxCode: { type: Type.STRING },
+                                    address: { type: Type.STRING }
+                                } 
+                            } 
+                        },
                         propertyAddress: { type: Type.STRING },
+                        cadastral: {
+                            type: Type.OBJECT,
+                            properties: {
+                                foglio: { type: Type.STRING },
+                                particella: { type: Type.STRING },
+                                subalterno: { type: Type.STRING },
+                                categoria: { type: Type.STRING }
+                            }
+                        },
                         annualRent: { type: Type.NUMBER },
+                        deposit: { type: Type.NUMBER },
                         contractType: { type: Type.STRING },
                         startDate: { type: Type.STRING },
                         stipulationDate: { type: Type.STRING },
@@ -32,18 +66,17 @@ export const extractContractData = async (base64Data: string, mimeType: string):
                         noticeMonthsOwner: { type: Type.NUMBER },
                         noticeMonthsTenant: { type: Type.NUMBER }
                     },
-                    required: ["startDate"]
+                    required: ["startDate", "owners", "tenants", "propertyAddress"]
                 }
             },
-            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Estrai parametri contrattuali." }] }]
+            contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Esegui analisi tecnica del contratto per Studio Commercialista." }] }]
         });
         
         let text = response.text || "{}";
-        // Pulizia forzata per evitare errori di parsing
         text = text.replace(/```json/g, "").replace(/```/g, "").trim();
         return JSON.parse(text);
     } catch (e) {
-        console.error("Lia Estrazione Error:", e);
+        console.error("Lia Critical Extraction Error:", e);
         return {};
     }
 };
@@ -55,9 +88,10 @@ export const generateFiscalReport = async (contracts: Contract[], type: string, 
             ? `Genera un'email professionale per lo studio ${studioSettings?.name || 'Commercialista'}. 
                Cliente: ${subjectName}. Scadenza: ${selectedDeadline?.type}. Data: ${selectedDeadline?.date}. 
                Immobile: ${selectedDeadline?.contractAddress}.
-               Scrivi un oggetto efficace e un corpo HTML formattato. Restituisci JSON con chiavi "subject" e "body".`
+               Contenuto: Spiega l'adempimento, i termini legali e cosa deve fare il cliente. 
+               Restituisci JSON con chiavi "subject" e "body" (HTML).`
             : `Genera un report fiscale HTML professionale per ${subjectName}. Contratti: ${JSON.stringify(contracts)}. 
-               Focus su scadenze RLI e termini disdetta. Usa Tailwind CSS inline.`;
+               Includi analisi scadenze, calcoli imposte e proiezioni fiscali. Usa Tailwind CSS inline.`;
 
         const response = await ai.models.generateContent({
             model: MODEL_PRO,
@@ -69,9 +103,9 @@ export const generateFiscalReport = async (contracts: Contract[], type: string, 
 
         if (type === 'MAIL_ADVISORY') {
             const data = JSON.parse(response.text?.replace(/```json/g, "").replace(/```/g, "").trim() || "{}");
-            return { html: data.body || "", subject: data.subject || "Avviso Scadenza" };
+            return { html: data.body || "", subject: data.subject || "Avviso Scadenza Studio" };
         }
-        return { html: response.text || "", subject: `Report Studio - ${subjectName}` };
+        return { html: response.text || "", subject: `Report Fiscale - ${subjectName}` };
     } catch (e) {
         return { html: "Errore generazione report.", subject: "Errore" };
     }
@@ -83,7 +117,8 @@ export const generatePortfolioInsights = async (contracts: Contract[]): Promise<
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: MODEL_FLASH,
-            contents: `Analizza portfolio: ${JSON.stringify(contracts)}. Segnala scadenze disdetta entro 6 mesi.`,
+            contents: `Analizza strategicamente questo portfolio di locazioni: ${JSON.stringify(contracts)}. 
+            Identifica rischi di morosità, scadenze disdetta critiche e opportunità di risparmio fiscale.`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -102,8 +137,10 @@ export const analyzeLeaseStrategy = async (userMsg: string, contracts: Contract[
         model: MODEL_PRO,
         contents: [...history.map(m => ({role: m.role === 'ai' ? 'model' : 'user', parts: [{text: m.content}]})), {role: 'user', parts: [{text: userMsg}]}],
         config: { 
-            systemInstruction: `Sei Lia. Le DATE sono la tua vita. Se non hai date certe, segnalalo. 
-            Fornisci calcoli esatti e bozze di lettere legali.` 
+            systemInstruction: `Sei Lia, assistente d'intelligence senior di uno Studio Commercialista. 
+            Conosci perfettamente la L. 431/98 e la L. 392/78. 
+            Le tue risposte devono essere tecnicamente ineccepibili, basate su DATE certe e calcoli fiscali esatti. 
+            Se ti chiedono una bozza di lettera, scrivila in modo formale e legale.` 
         }
     });
     return response.text || "";
